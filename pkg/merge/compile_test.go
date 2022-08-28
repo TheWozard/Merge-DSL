@@ -18,7 +18,7 @@ func TestCompile(t *testing.T) {
 		{
 			desc:   "",
 			input:  map[string]interface{}{},
-			output: &merge.Definition{},
+			output: nil,
 		},
 	}
 	for _, tC := range testCases {
