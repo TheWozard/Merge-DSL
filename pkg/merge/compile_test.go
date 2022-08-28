@@ -17,7 +17,7 @@ func TestCompile(t *testing.T) {
 	}{
 		{
 			desc:   "",
-			input:  nil,
+			input:  map[string]interface{}{},
 			output: &merge.Definition{},
 		},
 	}

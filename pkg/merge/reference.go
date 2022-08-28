@@ -119,8 +119,8 @@ func ImportFile[T any](path string) (T, error) {
 		if err != nil {
 			return document, fmt.Errorf("failed to import json file: %w", err)
 		}
-	} else if strings.HasPrefix(path, ".yaml") || strings.HasPrefix(path, ".yml") {
-		yaml.Unmarshal(raw, &document)
+	} else if strings.HasSuffix(path, ".yaml") || strings.HasSuffix(path, ".yml") {
+		err = yaml.Unmarshal(raw, &document)
 		if err != nil {
 			return document, fmt.Errorf("failed to import yaml file: %w", err)
 		}

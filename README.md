@@ -1,4 +1,6 @@
 # Merge-DSL
+[![Test](https://github.com/TheWozard/Merge-DSL/actions/workflows/test.yml/badge.svg)](https://github.com/TheWozard/Merge-DSL/actions/workflows/test.yml)
+[![Lint](https://github.com/TheWozard/Merge-DSL/actions/workflows/lint.yml/badge.svg)](https://github.com/TheWozard/Merge-DSL/actions/workflows/lint.yml)
 A YAML based DSL for merging multiple partial documents together.
 
 WIP Names:

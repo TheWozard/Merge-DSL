@@ -68,14 +68,13 @@ func TestImportValidatedReference(t *testing.T) {
 			desc:      "Object_Positive",
 			reference: `json:{"example":"value"}`,
 			schema:    `json:{"type":"object"}`,
-			result: map[string]interface{}{
-				"example": "value",
-			},
+			result:    map[string]interface{}{"example": "value"},
 		},
 		{
 			desc:      "Object_Failure",
 			reference: `json:{"example":"value"}`,
 			schema:    `json:{"type":"array"}`,
+			result:    map[string]interface{}{"example": "value"},
 			err:       fmt.Errorf("failed to validate document: Invalid type. Expected: array, given: object"),
 		},
 	}
