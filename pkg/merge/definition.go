@@ -1,15 +1,23 @@
 package merge
 
 type (
-	Definition interface {
+	Definition struct {
+		traversal traversal
 	}
 
-	ObjectDefinition struct {
+	traversal interface {
 	}
 
-	ArrayDefinition struct {
+	objectTraversal struct {
+		nodeTraversals map[string]traversal
 	}
 
-	LeafDefinition struct {
+	arrayTraversal struct {
+		defaultTraversal traversal
+		idTraversals     map[interface{}]traversal
+	}
+
+	leafTraversal struct {
+		// allowNull bool
 	}
 )
