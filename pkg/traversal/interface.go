@@ -1,13 +1,13 @@
 package traversal
 
 type IdIndexer[T any] interface {
-	Parse(item TraversalPointer[T]) interface{}
-	Index(pointer TraversalPointer[T]) (map[interface{}]TraversalPointer[T], []TraversalPointer[T])
+	Parse(item Pointer[T]) interface{}
+	Index(pointer Pointer[T]) (map[interface{}]Pointer[T], []Pointer[T])
 }
 
-type TraversalPointer[T any] interface {
+type Pointer[T any] interface {
 	IsEdge() bool
 	Value() T
-	GetKey(key string) TraversalPointer[T]
-	GetItems() []TraversalPointer[T]
+	GetKey(key string) Pointer[T]
+	GetItems() []Pointer[T]
 }

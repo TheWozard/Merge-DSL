@@ -1,12 +1,12 @@
 package traversal
 
 type safeTraversalPointer[T any] struct {
-	pointer TraversalPointer[T]
+	pointer Pointer[T]
 }
 
 // Wraps a given pointer in a safety net that allows it to traverse outside of the root tree safely.
 // It is generally preferred to check if a pointer is nil and drop any nil pointers as it is more efficient.
-func Safe[T any](pointer TraversalPointer[T]) TraversalPointer[T] {
+func Safe[T any](pointer Pointer[T]) Pointer[T] {
 	return safeTraversalPointer[T]{pointer: pointer}
 }
 
@@ -25,7 +25,7 @@ func (s safeTraversalPointer[T]) Value() T {
 	return empty
 }
 
-func (s safeTraversalPointer[T]) GetKey(key string) TraversalPointer[T] {
+func (s safeTraversalPointer[T]) GetKey(key string) Pointer[T] {
 	result := safeTraversalPointer[T]{}
 	if s.pointer != nil {
 		if next := s.pointer.GetKey(key); next != nil {
@@ -35,8 +35,8 @@ func (s safeTraversalPointer[T]) GetKey(key string) TraversalPointer[T] {
 	return result
 }
 
-func (s safeTraversalPointer[T]) GetItems() []TraversalPointer[T] {
-	final := []TraversalPointer[T]{}
+func (s safeTraversalPointer[T]) GetItems() []Pointer[T] {
+	final := []Pointer[T]{}
 	if s.pointer != nil {
 		for _, item := range s.pointer.GetItems() {
 			final = append(final, safeTraversalPointer[T]{pointer: item})

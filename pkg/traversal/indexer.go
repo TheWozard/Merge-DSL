@@ -6,11 +6,11 @@ package traversal
 // Returns both the index as well as a slice of all pointers without an id.
 // nil pointer returns an empty index and an empty extra
 // nil parser returns empty index and pointer.GetItems()
-func IndexPointerItemsById[T any](pointer TraversalPointer[T], parser IdIndexer[T]) (map[interface{}]TraversalPointer[T], []TraversalPointer[T]) {
+func IndexPointerItemsById[T any](pointer Pointer[T], parser IdIndexer[T]) (map[interface{}]Pointer[T], []Pointer[T]) {
 	// TODO: Would it be better to return an index of lists. That way all matches could be merged.
 	// Order would have to be preserved to keep merge consistent.
-	index := map[interface{}]TraversalPointer[T]{}
-	extra := []TraversalPointer[T]{}
+	index := map[interface{}]Pointer[T]{}
+	extra := []Pointer[T]{}
 	// Panic safety
 	if pointer == nil {
 		return index, extra
@@ -38,7 +38,7 @@ type PointerKeyIdIndexer[T any] struct {
 	IgnoreIsEdge bool
 }
 
-func (k PointerKeyIdIndexer[T]) Parse(pointer TraversalPointer[T]) interface{} {
+func (k PointerKeyIdIndexer[T]) Parse(pointer Pointer[T]) interface{} {
 	if node := pointer.GetKey(k.Key); node != nil {
 		if k.IgnoreIsEdge || node.IsEdge() {
 			return node.Value()
@@ -47,6 +47,6 @@ func (k PointerKeyIdIndexer[T]) Parse(pointer TraversalPointer[T]) interface{} {
 	return nil
 }
 
-func (k PointerKeyIdIndexer[T]) Index(pointer TraversalPointer[T]) (map[interface{}]TraversalPointer[T], []TraversalPointer[T]) {
+func (k PointerKeyIdIndexer[T]) Index(pointer Pointer[T]) (map[interface{}]Pointer[T], []Pointer[T]) {
 	return IndexPointerItemsById[T](pointer, k)
 }

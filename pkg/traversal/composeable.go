@@ -3,11 +3,11 @@ package traversal
 type (
 	MapPointer[T any] struct {
 		Data  T
-		Nodes map[string]TraversalPointer[T]
+		Nodes map[string]Pointer[T]
 	}
 	SlicePointer[T any] struct {
 		Data  T
-		Items []TraversalPointer[T]
+		Items []Pointer[T]
 	}
 	EdgePointer[T any] struct {
 		Data T
@@ -26,15 +26,15 @@ func (m MapPointer[T]) Value() T {
 	return m.Data
 }
 
-func (m MapPointer[T]) GetKey(key string) TraversalPointer[T] {
+func (m MapPointer[T]) GetKey(key string) Pointer[T] {
 	if node, ok := m.Nodes[key]; ok {
 		return node
 	}
 	return nil
 }
 
-func (m MapPointer[T]) GetItems() []TraversalPointer[T] {
-	return []TraversalPointer[T]{}
+func (m MapPointer[T]) GetItems() []Pointer[T] {
+	return []Pointer[T]{}
 }
 
 /*
@@ -49,11 +49,11 @@ func (c SlicePointer[T]) Value() T {
 	return c.Data
 }
 
-func (c SlicePointer[T]) GetKey(key string) TraversalPointer[T] {
+func (c SlicePointer[T]) GetKey(key string) Pointer[T] {
 	return nil
 }
 
-func (c SlicePointer[T]) GetItems() []TraversalPointer[T] {
+func (c SlicePointer[T]) GetItems() []Pointer[T] {
 	return c.Items
 }
 
@@ -69,10 +69,10 @@ func (e EdgePointer[T]) Value() T {
 	return e.Data
 }
 
-func (e EdgePointer[T]) GetKey(key string) TraversalPointer[T] {
+func (e EdgePointer[T]) GetKey(key string) Pointer[T] {
 	return nil
 }
 
-func (e EdgePointer[T]) GetItems() []TraversalPointer[T] {
-	return []TraversalPointer[T]{}
+func (e EdgePointer[T]) GetItems() []Pointer[T] {
+	return []Pointer[T]{}
 }

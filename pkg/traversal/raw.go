@@ -13,7 +13,7 @@ type (
 )
 
 // NewRawTraversal converts raw golang struct based on json data into a traversable tree
-func NewRawTraversal(raw interface{}) TraversalPointer[interface{}] {
+func NewRawTraversal(raw interface{}) Pointer[interface{}] {
 	switch typed := raw.(type) {
 	case map[string]interface{}:
 		return rawMapTraversalPointer{nodes: typed}
@@ -24,7 +24,7 @@ func NewRawTraversal(raw interface{}) TraversalPointer[interface{}] {
 }
 
 /*
- * rawObjectTraversalPointer
+ * rawMapTraversalPointer
  */
 
 func (o rawMapTraversalPointer) IsEdge() bool {
@@ -35,19 +35,19 @@ func (o rawMapTraversalPointer) Value() interface{} {
 	return o.nodes
 }
 
-func (o rawMapTraversalPointer) GetKey(key string) TraversalPointer[interface{}] {
+func (o rawMapTraversalPointer) GetKey(key string) Pointer[interface{}] {
 	if data, ok := o.nodes[key]; ok {
 		return NewRawTraversal(data)
 	}
 	return nil
 }
 
-func (o rawMapTraversalPointer) GetItems() []TraversalPointer[interface{}] {
-	return []TraversalPointer[interface{}]{}
+func (o rawMapTraversalPointer) GetItems() []Pointer[interface{}] {
+	return []Pointer[interface{}]{}
 }
 
 /*
- * rawArrayTraversalPointer
+ * rawSliceTraversalPointer
  */
 
 func (a rawSliceTraversalPointer) IsEdge() bool {
@@ -58,12 +58,12 @@ func (a rawSliceTraversalPointer) Value() interface{} {
 	return a.items
 }
 
-func (a rawSliceTraversalPointer) GetKey(key string) TraversalPointer[interface{}] {
+func (a rawSliceTraversalPointer) GetKey(key string) Pointer[interface{}] {
 	return nil
 }
 
-func (a rawSliceTraversalPointer) GetItems() []TraversalPointer[interface{}] {
-	items := []TraversalPointer[interface{}]{}
+func (a rawSliceTraversalPointer) GetItems() []Pointer[interface{}] {
+	items := []Pointer[interface{}]{}
 	for _, item := range a.items {
 		items = append(items, NewRawTraversal(item))
 	}
@@ -82,10 +82,10 @@ func (e rawEdgeTraversalPointer) Value() interface{} {
 	return e.data
 }
 
-func (e rawEdgeTraversalPointer) GetKey(key string) TraversalPointer[interface{}] {
+func (e rawEdgeTraversalPointer) GetKey(key string) Pointer[interface{}] {
 	return nil
 }
 
-func (e rawEdgeTraversalPointer) GetItems() []TraversalPointer[interface{}] {
-	return []TraversalPointer[interface{}]{}
+func (e rawEdgeTraversalPointer) GetItems() []Pointer[interface{}] {
+	return []Pointer[interface{}]{}
 }
