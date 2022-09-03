@@ -19,7 +19,7 @@ func TestCompile(t *testing.T) {
 			desc:   "empty input",
 			input:  map[string]interface{}{},
 			output: nil,
-			err:    fmt.Errorf("failed to locate type in definition"),
+			err:    fmt.Errorf("cannot compile nil cursor"),
 		},
 		{
 			desc: "object",
@@ -44,9 +44,9 @@ func TestCompile(t *testing.T) {
 			},
 		},
 		{
-			desc: "leaf",
+			desc: "edge",
 			input: map[string]interface{}{
-				"type": "leaf",
+				"type": "edge",
 			},
 			output: &Definition{
 				traversal: &edgeTraversal{},

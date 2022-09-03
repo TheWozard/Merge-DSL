@@ -29,7 +29,11 @@ func Compile(document map[string]interface{}) (*Definition, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to validated document: %w", err)
 	}
-	traversal, err := compile(cursor.NewSchemaCursor(document))
+	current := cursor.NewSchemaCursor(document)
+	if current == nil {
+		return nil, fmt.Errorf("cannot compile nil cursor")
+	}
+	traversal, err := compile(current)
 	if err != nil {
 		return nil, err
 	}

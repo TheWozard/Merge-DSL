@@ -1,7 +1,7 @@
 package cursor
 
 var (
-	DefaultRawIndexer    = RawCursorIdParser[interface{}]{Key: "$id"}
+	DefaultRawIndexer    = RawCursorIdParser[interface{}]{Key: "id"}
 	DefaultSchemaIndexer = SchemaCursorIdParser{Key: "id"}
 )
 
