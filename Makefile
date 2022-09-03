@@ -1,7 +1,7 @@
 .PHONY: test clean start coverage
 
 test:
-	 go test ./...
+	 go test -count=1 -v ./...
 
 coverage:
 	go test -coverprofile=coverage.out  ./...
@@ -9,7 +9,3 @@ coverage:
 
 clean:
 	git clean -fXd
-
-start:
-	GIN_MODE=release PORT=8080 go run cmd/server/main.go
-
