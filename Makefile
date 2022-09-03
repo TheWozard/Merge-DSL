@@ -1,7 +1,11 @@
-.PHONY: test clean start
+.PHONY: test clean start coverage
 
 test:
 	 go test ./...
+
+coverage:
+	go test -coverprofile=coverage.out  ./...
+	go tool cover -html=coverage.out
 
 clean:
 	git clean -fXd

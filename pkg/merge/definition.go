@@ -17,7 +17,7 @@ type (
 		idTraversals     map[interface{}]traversal
 	}
 
-	leafTraversal struct {
+	edgeTraversal struct {
 		// allowNull bool
 	}
 )

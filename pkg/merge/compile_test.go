@@ -49,7 +49,7 @@ func TestCompile(t *testing.T) {
 				"type": "leaf",
 			},
 			output: &Definition{
-				traversal: &leafTraversal{},
+				traversal: &edgeTraversal{},
 			},
 		},
 	}

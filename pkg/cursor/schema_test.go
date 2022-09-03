@@ -1,15 +1,15 @@
-package traversal_test
+package cursor_test
 
 import (
-	"merge-dsl/pkg/traversal"
+	"merge-dsl/pkg/cursor"
 	"testing"
 )
 
-func TestNewSchemaTraversal(t *testing.T) {
+func TestNewSchemaCursor(t *testing.T) {
 	testCases := []struct {
 		desc  string
 		input map[string]interface{}
-		cases StandardCases[map[string]interface{}]
+		cases CursorCase[map[string]interface{}]
 	}{
 		{
 			desc: "object",
@@ -21,7 +21,7 @@ func TestNewSchemaTraversal(t *testing.T) {
 					},
 				},
 			},
-			cases: StandardCases[map[string]interface{}]{
+			cases: CursorCase[map[string]interface{}]{
 				IsEdge: false, Value: map[string]interface{}{
 					"type": "object",
 					"properties": map[string]interface{}{
@@ -30,13 +30,15 @@ func TestNewSchemaTraversal(t *testing.T) {
 						},
 					},
 				},
-				Keys: map[string]traversal.Pointer[map[string]interface{}]{
-					"extra": traversal.NewSchemaTraversal(map[string]interface{}{
+				Key: map[string]cursor.Cursor[map[string]interface{}]{
+					"extra": cursor.NewSchemaCursor(map[string]interface{}{
 						"type": "edge",
 					}),
 					"anything": nil,
 				},
-				Items: []traversal.Pointer[map[string]interface{}]{},
+				Keys:    []string{"extra"},
+				Items:   []cursor.Cursor[map[string]interface{}]{},
+				Default: nil,
 			},
 		},
 		{
@@ -44,14 +46,16 @@ func TestNewSchemaTraversal(t *testing.T) {
 			input: map[string]interface{}{
 				"type": "object",
 			},
-			cases: StandardCases[map[string]interface{}]{
+			cases: CursorCase[map[string]interface{}]{
 				IsEdge: false, Value: map[string]interface{}{
 					"type": "object",
 				},
-				Keys: map[string]traversal.Pointer[map[string]interface{}]{
+				Key: map[string]cursor.Cursor[map[string]interface{}]{
 					"anything": nil,
 				},
-				Items: []traversal.Pointer[map[string]interface{}]{},
+				Keys:    []string{},
+				Items:   []cursor.Cursor[map[string]interface{}]{},
+				Default: nil,
 			},
 		},
 		{
@@ -68,8 +72,11 @@ func TestNewSchemaTraversal(t *testing.T) {
 						"type": "edge",
 					},
 				},
+				"default": map[string]interface{}{
+					"type": "edge",
+				},
 			},
-			cases: StandardCases[map[string]interface{}]{
+			cases: CursorCase[map[string]interface{}]{
 				IsEdge: false, Value: map[string]interface{}{
 					"type": "array",
 					"items": []interface{}{
@@ -82,20 +89,27 @@ func TestNewSchemaTraversal(t *testing.T) {
 							"type": "edge",
 						},
 					},
+					"default": map[string]interface{}{
+						"type": "edge",
+					},
 				},
-				Keys: map[string]traversal.Pointer[map[string]interface{}]{
+				Key: map[string]cursor.Cursor[map[string]interface{}]{
 					"anything": nil,
 				},
-				Items: []traversal.Pointer[map[string]interface{}]{
-					traversal.NewSchemaTraversal(map[string]interface{}{
+				Keys: []string{},
+				Items: []cursor.Cursor[map[string]interface{}]{
+					cursor.NewSchemaCursor(map[string]interface{}{
 						"id":   0,
 						"type": "edge",
 					}),
-					traversal.NewSchemaTraversal(map[string]interface{}{
+					cursor.NewSchemaCursor(map[string]interface{}{
 						"id":   1,
 						"type": "edge",
 					}),
 				},
+				Default: cursor.NewSchemaCursor(map[string]interface{}{
+					"type": "edge",
+				}),
 			},
 		},
 		{
@@ -103,14 +117,16 @@ func TestNewSchemaTraversal(t *testing.T) {
 			input: map[string]interface{}{
 				"type": "array",
 			},
-			cases: StandardCases[map[string]interface{}]{
+			cases: CursorCase[map[string]interface{}]{
 				IsEdge: false, Value: map[string]interface{}{
 					"type": "array",
 				},
-				Keys: map[string]traversal.Pointer[map[string]interface{}]{
+				Key: map[string]cursor.Cursor[map[string]interface{}]{
 					"anything": nil,
 				},
-				Items: []traversal.Pointer[map[string]interface{}]{},
+				Keys:    []string{},
+				Items:   []cursor.Cursor[map[string]interface{}]{},
+				Default: nil,
 			},
 		},
 		{
@@ -118,20 +134,22 @@ func TestNewSchemaTraversal(t *testing.T) {
 			input: map[string]interface{}{
 				"type": "edge",
 			},
-			cases: StandardCases[map[string]interface{}]{
+			cases: CursorCase[map[string]interface{}]{
 				IsEdge: true, Value: map[string]interface{}{
 					"type": "edge",
 				},
-				Keys: map[string]traversal.Pointer[map[string]interface{}]{
+				Key: map[string]cursor.Cursor[map[string]interface{}]{
 					"anything": nil,
 				},
-				Items: []traversal.Pointer[map[string]interface{}]{},
+				Keys:    []string{},
+				Items:   []cursor.Cursor[map[string]interface{}]{},
+				Default: nil,
 			},
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			PointerTestSuite(t, traversal.NewSchemaTraversal(tC.input), tC.cases)
+			CursorTestSuite(t, cursor.NewSchemaCursor(tC.input), tC.cases)
 		})
 	}
 }

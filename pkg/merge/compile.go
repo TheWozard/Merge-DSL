@@ -2,20 +2,16 @@ package merge
 
 import (
 	"fmt"
+	"merge-dsl/pkg/cursor"
 )
 
 const (
 	TransformSchemaReference = "file://./schemas/transform_schema.yaml"
 
-	TypeKey       = "type"
-	PropertiesKey = "properties"
-	ItemsKey      = "items"
-	IdsKey        = "ids"
-	IdKey         = "id"
-
+	TypeKey    = "type"
 	ObjectType = "object"
 	ArrayType  = "array"
-	LeafType   = "leaf"
+	EdgeType   = "edge"
 )
 
 // CompileReference imports the passed reference and passes it to Compile.
@@ -33,7 +29,7 @@ func Compile(document map[string]interface{}) (*Definition, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to validated document: %w", err)
 	}
-	traversal, err := compile(document)
+	traversal, err := compile(cursor.NewSchemaCursor(document))
 	if err != nil {
 		return nil, err
 	}
@@ -44,18 +40,19 @@ func Compile(document map[string]interface{}) (*Definition, error) {
 
 // compile uses the type defined on the document to call the right definition compile function
 // used recursively to compile the entire tree.
-func compile(document map[string]interface{}) (traversal, error) {
-	if typ, ok := document[TypeKey].(string); ok {
+func compile(current cursor.SchemaCursor) (traversal, error) {
+	value := current.Value()
+	if typ, ok := value[TypeKey].(string); ok {
 		switch typ {
 		case ObjectType:
 			def := &objectTraversal{}
-			return def, def.compile(document)
+			return def, def.compile(current, value)
 		case ArrayType:
 			def := &arrayTraversal{}
-			return def, def.compile(document)
-		case LeafType:
-			def := &leafTraversal{}
-			return def, def.compile(document)
+			return def, def.compile(current, value)
+		case EdgeType:
+			def := &edgeTraversal{}
+			return def, def.compile(current, value)
 		default:
 			// Should be caught by validation, just in case.
 			return nil, fmt.Errorf("unknown compile type '%s'", typ)
@@ -64,49 +61,44 @@ func compile(document map[string]interface{}) (traversal, error) {
 	return nil, fmt.Errorf("failed to locate type in definition")
 }
 
-func (o *objectTraversal) compile(info map[string]interface{}) error {
+func (o *objectTraversal) compile(current cursor.SchemaCursor, data map[string]interface{}) error {
 	o.nodeTraversals = map[string]traversal{}
-	if properties, ok := info[PropertiesKey].(map[string]interface{}); ok {
-		for key, property := range properties {
-			if typed, ok := property.(map[string]interface{}); ok {
-				traversal, err := compile(typed)
-				if err != nil {
-					return fmt.Errorf("failed to compile node '%s': %w", key, err)
-				}
-				o.nodeTraversals[key] = traversal
+	for _, key := range current.GetKeys() {
+		if nextCursor := current.GetKey(key); nextCursor != nil {
+			compiled, err := compile(nextCursor)
+			if err != nil {
+				return fmt.Errorf("failed to compile node '%s': %w", key, err)
 			}
+			o.nodeTraversals[key] = compiled
 		}
 	}
 	return nil
 }
 
-func (a *arrayTraversal) compile(info map[string]interface{}) error {
-	if items, ok := info[PropertiesKey].(map[string]interface{}); ok {
-		traversal, err := compile(items)
+func (a *arrayTraversal) compile(current cursor.SchemaCursor, data map[string]interface{}) error {
+	if def := current.GetDefault(); def != nil {
+		traversal, err := compile(def)
 		if err != nil {
-			return fmt.Errorf("failed to compile items: %w", err)
+			return fmt.Errorf("failed to compile default: %w", err)
 		}
 		a.defaultTraversal = traversal
 	}
+
 	a.idTraversals = map[interface{}]traversal{}
-	// We unfortunately have to store these as an array as object keys
-	// in json can only be provided as strings.
-	if ids, ok := info[IdsKey].([]interface{}); ok {
-		for _, idData := range ids {
-			if typed, ok := idData.(map[string]interface{}); ok {
-				if id, ok := typed[IdKey]; ok {
-					traversal, err := compile(typed)
-					if err != nil {
-						return fmt.Errorf("failed to compile node '%v': %w", id, err)
-					}
-					a.idTraversals[id] = traversal
-				}
-			}
+	index, extra := cursor.DefaultSchemaIndexer.Index(current.GetItems())
+	if len(extra) > 0 {
+		return fmt.Errorf("unexpected non-id node during array compile")
+	}
+	for id, item := range index {
+		traversal, err := compile(item)
+		if err != nil {
+			return fmt.Errorf("failed to compile id traversal: %w", err)
 		}
+		a.idTraversals[id] = traversal
 	}
 	return nil
 }
 
-func (l *leafTraversal) compile(info map[string]interface{}) error {
+func (l *edgeTraversal) compile(current cursor.SchemaCursor, data map[string]interface{}) error {
 	return nil
 }
