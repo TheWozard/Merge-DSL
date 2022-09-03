@@ -1,9 +1,9 @@
-package merge_test
+package reference_test
 
 import (
 	"fmt"
 	"merge-dsl/pkg/internal"
-	"merge-dsl/pkg/merge"
+	"merge-dsl/pkg/reference"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -31,9 +31,9 @@ func TestImportValidatedReference(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			data, err := merge.ImportReference[interface{}](tC.reference)
+			data, err := reference.ImportReference[interface{}](tC.reference)
 			require.Nil(t, err)
-			err = merge.IsValidByReference(data, tC.schema)
+			err = reference.IsValidByReference(data, tC.schema)
 			internal.ErrorsMatch(t, tC.err, err)
 		})
 	}

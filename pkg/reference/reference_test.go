@@ -1,8 +1,8 @@
-package merge_test
+package reference_test
 
 import (
 	"merge-dsl/pkg/internal"
-	"merge-dsl/pkg/merge"
+	"merge-dsl/pkg/reference"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -39,7 +39,7 @@ func TestImportReference(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			result, err := merge.ImportReference[interface{}](tC.reference)
+			result, err := reference.ImportReference[interface{}](tC.reference)
 			internal.ErrorsMatch(t, tC.err, err)
 			assert.Equal(t, tC.result, result)
 		})
@@ -50,7 +50,7 @@ func TestImportToCustomStruct(t *testing.T) {
 	type TestStruct struct {
 		Data string `json:"data"`
 	}
-	result, err := merge.ImportReference[TestStruct](`json:{"data": "expected"}`)
+	result, err := reference.ImportReference[TestStruct](`json:{"data": "expected"}`)
 	assert.Nil(t, err)
 	assert.Equal(t, TestStruct{Data: "expected"}, result)
 }

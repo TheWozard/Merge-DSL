@@ -3,6 +3,7 @@ package merge
 import (
 	"fmt"
 	"merge-dsl/pkg/cursor"
+	"merge-dsl/pkg/reference"
 )
 
 const (
@@ -15,8 +16,8 @@ const (
 )
 
 // CompileReference imports the passed reference and passes it to Compile.
-func CompileReference(reference string) (*Definition, error) {
-	document, err := ImportReference[map[string]interface{}](reference)
+func CompileReference(ref string) (*Definition, error) {
+	document, err := reference.ImportReference[map[string]interface{}](ref)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load document: %w", err)
 	}
@@ -25,7 +26,7 @@ func CompileReference(reference string) (*Definition, error) {
 
 // Compiles the passed golang structure into a ready to use Definition.
 func Compile(document map[string]interface{}) (*Definition, error) {
-	err := IsValidByReference(document, TransformSchemaReference)
+	err := reference.IsValidByReference(document, TransformSchemaReference)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validated document: %w", err)
 	}
