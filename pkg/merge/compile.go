@@ -94,8 +94,11 @@ func (a *arrayTraversal) compile(current cursor.SchemaCursor, data map[string]in
 	if len(extra) > 0 {
 		return fmt.Errorf("unexpected non-id node during array compile")
 	}
-	for id, item := range index {
-		traversal, err := compile(item)
+	for id, items := range index {
+		if len(items) != 1 {
+			return fmt.Errorf("found %d instances of the id '%v'", len(items), id)
+		}
+		traversal, err := compile(items[0])
 		if err != nil {
 			return fmt.Errorf("failed to compile id traversal: %w", err)
 		}

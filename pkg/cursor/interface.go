@@ -23,7 +23,7 @@ type IdParser[T any] interface {
 	// Parse extracts the Id from a cursor
 	Parse(item Cursor[T]) interface{}
 	// Index convenience function for calling IndexCursorsById with the passed cursors and this parser
-	Index(cursors []Cursor[T]) (map[interface{}]Cursor[T], []Cursor[T])
+	Index(cursors []Cursor[T]) (map[interface{}][]Cursor[T], []Cursor[T])
 }
 
 type RawData = interface{}
