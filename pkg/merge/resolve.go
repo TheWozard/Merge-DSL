@@ -3,6 +3,7 @@ package merge
 import (
 	"fmt"
 	"merge-dsl/pkg/cursor"
+	"merge-dsl/pkg/cursor/validator"
 )
 
 type (
@@ -80,5 +81,5 @@ func (a *arrayTraversal) resolve(documents DocumentCursorSet, rules RulesCursorS
 }
 
 func (l *edgeTraversal) resolve(documents DocumentCursorSet, rules RulesCursorSet) (interface{}, error) {
-	return documents.Value(), nil
+	return documents.Value(validator.NonNil), nil
 }

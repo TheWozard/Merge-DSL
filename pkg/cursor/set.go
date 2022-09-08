@@ -1,28 +1,22 @@
 package cursor
 
 // CursorSet makes handling a list of cursors easier.
-type CursorSet[T any] struct {
-	Set       []Cursor[T]
-	Validator func(T) bool
-}
+type CursorSet[T any] []Cursor[T]
 
 func (s CursorSet[T]) NewSet(set ...Cursor[T]) CursorSet[T] {
-	return CursorSet[T]{
-		Set:       set,
-		Validator: s.Validator,
-	}
+	return set
 }
 
 func (s CursorSet[T]) IsEdge() bool {
-	if len(s.Set) > 0 {
-		return s.Set[0].IsEdge()
+	if len(s) > 0 {
+		return s[0].IsEdge()
 	}
 	return true
 }
 
-func (s CursorSet[T]) Value() T {
-	for _, cursor := range s.Set {
-		if value := cursor.Value(); s.Validator(value) {
+func (s CursorSet[T]) Value(validator func(T) bool) T {
+	for _, cursor := range s {
+		if value := cursor.Value(); validator(value) {
 			return value
 		}
 	}
@@ -30,19 +24,9 @@ func (s CursorSet[T]) Value() T {
 	return empty
 }
 
-func (s CursorSet[T]) AllValues() []T {
-	values := []T{}
-	for _, cursor := range s.Set {
-		if value := cursor.Value(); s.Validator(value) {
-			values = append(values, value)
-		}
-	}
-	return values
-}
-
 func (s CursorSet[T]) GetKey(key string) CursorSet[T] {
 	sets := []Cursor[T]{}
-	for _, cursor := range s.Set {
+	for _, cursor := range s {
 		if next := cursor.GetKey(key); next != nil {
 			sets = append(sets, next)
 		}
@@ -52,7 +36,7 @@ func (s CursorSet[T]) GetKey(key string) CursorSet[T] {
 
 func (s CursorSet[T]) GetItems() []CursorSet[T] {
 	result := []CursorSet[T]{}
-	for _, cursor := range s.Set {
+	for _, cursor := range s {
 		for _, child := range cursor.GetItems() {
 			result = append(result, s.NewSet(child))
 		}
@@ -63,7 +47,7 @@ func (s CursorSet[T]) GetItems() []CursorSet[T] {
 func (s CursorSet[T]) GetIdsAndExtra(parser IdParser[T]) (map[interface{}]CursorSet[T], []CursorSet[T]) {
 	extra := []CursorSet[T]{}
 	index := map[interface{}][]Cursor[T]{}
-	for _, cursor := range s.Set {
+	for _, cursor := range s {
 		for _, extra_cursor := range PopulateIndexCursorsById(cursor.GetItems(), parser, index) {
 			extra = append(extra, s.NewSet(extra_cursor))
 		}
@@ -77,7 +61,7 @@ func (s CursorSet[T]) GetIdsAndExtra(parser IdParser[T]) (map[interface{}]Cursor
 
 func (s CursorSet[T]) GetDefault() CursorSet[T] {
 	result := []Cursor[T]{}
-	for _, cursor := range s.Set {
+	for _, cursor := range s {
 		if def := cursor.GetDefault(); def != nil {
 			result = append(result, def)
 		}

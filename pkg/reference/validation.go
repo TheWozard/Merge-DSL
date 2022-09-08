@@ -7,10 +7,24 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
+// NewSchemaValidator creates a new SchemaValidator with an empty starting cache
+func NewSchemaValidator(importer Resolver) *SchemaValidator {
+	return &SchemaValidator{
+		Cache:    map[string]*gojsonschema.Schema{},
+		Importer: importer,
+	}
+}
+
+// Used to validate documents against a schema
+type SchemaValidator struct {
+	Cache    map[string]*gojsonschema.Schema
+	Importer Resolver
+}
+
 // IsValidByReference validates that the passed document is valid according to the json schema loaded by reference.
 // Returns nil when valid.
-func IsValidByReference(document interface{}, schemaReference string) error {
-	schema, err := ImportSchemaReference(schemaReference)
+func (sv *SchemaValidator) IsValidByReference(document interface{}, schemaReference string) error {
+	schema, err := sv.ImportSchemaReference(schemaReference)
 	if err != nil {
 		return fmt.Errorf("failed to load schema: %w", err)
 	}
@@ -29,17 +43,17 @@ func IsValidByReference(document interface{}, schemaReference string) error {
 }
 
 // ImportSchemaReference load a reference into memory as a *gojsonschema.Schema
-func ImportSchemaReference(schemaReference string) (*gojsonschema.Schema, error) {
-	if _, ok := schemaCache[schemaReference]; !ok {
-		raw, err := ImportReference[interface{}](schemaReference)
+func (sv *SchemaValidator) ImportSchemaReference(schemaReference string) (*gojsonschema.Schema, error) {
+	if _, ok := sv.Cache[schemaReference]; !ok {
+		raw, err := sv.Importer.ImportInterface(schemaReference)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load raw schema document: %w", err)
 		}
-		schema, err := gojsonschema.NewSchemaLoader().Compile(gojsonschema.NewGoLoader(raw))
+		schema, err := gojsonschema.NewSchemaLoader().Compile(gojsonschema.NewGoLoader(raw.Data))
 		if err != nil {
 			return nil, fmt.Errorf("failed to compile schema document: %w", err)
 		}
-		schemaCache[schemaReference] = schema
+		sv.Cache[schemaReference] = schema
 	}
-	return schemaCache[schemaReference], nil
+	return sv.Cache[schemaReference], nil
 }

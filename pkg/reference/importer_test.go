@@ -8,7 +8,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestImportReference(t *testing.T) {
+var (
+	defaultTestImporter = reference.Resolver{
+		reference.JSONPrefix: (&reference.EmbeddedClient{Format: reference.JSONFormat}).Import,
+		reference.YAMLPrefix: (&reference.EmbeddedClient{Format: reference.YAMLFormat}).Import,
+	}
+)
+
+func TestImporter(t *testing.T) {
+
 	testCases := []struct {
 		desc      string
 		reference string
@@ -39,9 +47,9 @@ func TestImportReference(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			result, err := reference.ImportReference[interface{}](tC.reference)
+			result, err := reference.Import[interface{}](defaultTestImporter, tC.reference)
 			internal.ErrorsMatch(t, tC.err, err)
-			assert.Equal(t, tC.result, result)
+			assert.Equal(t, tC.result, result.Data)
 		})
 	}
 }
@@ -50,7 +58,7 @@ func TestImportToCustomStruct(t *testing.T) {
 	type TestStruct struct {
 		Data string `json:"data"`
 	}
-	result, err := reference.ImportReference[TestStruct](`json:{"data": "expected"}`)
+	result, err := reference.Import[TestStruct](defaultTestImporter, `json:{"data": "expected"}`)
 	assert.Nil(t, err)
-	assert.Equal(t, TestStruct{Data: "expected"}, result)
+	assert.Equal(t, TestStruct{Data: "expected"}, result.Data)
 }

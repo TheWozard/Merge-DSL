@@ -9,7 +9,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	defaultTestValidator = reference.NewSchemaValidator(defaultTestImporter)
+)
+
 func TestImportValidatedReference(t *testing.T) {
+
 	testCases := []struct {
 		desc      string
 		reference string
@@ -31,9 +36,9 @@ func TestImportValidatedReference(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			data, err := reference.ImportReference[interface{}](tC.reference)
+			imported, err := reference.Import[interface{}](defaultTestImporter, tC.reference)
 			require.Nil(t, err)
-			err = reference.IsValidByReference(data, tC.schema)
+			err = defaultTestValidator.IsValidByReference(imported.Data, tC.schema)
 			internal.ErrorsMatch(t, tC.err, err)
 		})
 	}

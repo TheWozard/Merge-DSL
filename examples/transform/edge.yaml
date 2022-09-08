@@ -1,0 +1,2 @@
+# This transform will simply return the first value it comes across.
+type: edge

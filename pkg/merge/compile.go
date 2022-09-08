@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	TransformSchemaReference = "file://./schemas/transform_schema.yaml"
+	// TODO: what would moving this to the compiler look like
+	TransformSchemaReference = "schema://transform_schema.yaml"
 
 	TypeKey    = "type"
 	ObjectType = "object"
@@ -15,18 +16,23 @@ const (
 	EdgeType   = "edge"
 )
 
+type Compiler struct {
+	Importer  reference.Resolver
+	Validator *reference.SchemaValidator
+}
+
 // CompileReference imports the passed reference and passes it to Compile.
-func CompileReference(ref string) (*Definition, error) {
-	document, err := reference.ImportReference[map[string]interface{}](ref)
+func (c *Compiler) CompileReference(ref string) (*Definition, error) {
+	resolved, err := c.Importer.ImportMap(ref)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load document: %w", err)
+		return nil, fmt.Errorf("failed to resolve reference for compiling: %w", err)
 	}
-	return Compile(document)
+	return c.Compile(resolved.Data)
 }
 
 // Compiles the passed golang structure into a ready to use Definition.
-func Compile(document map[string]interface{}) (*Definition, error) {
-	err := reference.IsValidByReference(document, TransformSchemaReference)
+func (c *Compiler) Compile(document map[string]interface{}) (*Definition, error) {
+	err := c.Validator.IsValidByReference(document, TransformSchemaReference)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validated document: %w", err)
 	}

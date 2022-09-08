@@ -3,12 +3,21 @@ package merge
 import (
 	"fmt"
 	"merge-dsl/pkg/internal"
+	"merge-dsl/pkg/reference"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCompile(t *testing.T) {
+	importer := reference.Resolver{
+		reference.SchemaPrefix: (&reference.FileClient{Root: "../resources/schemas"}).Import,
+	}
+	compiler := Compiler{
+		Importer:  importer,
+		Validator: reference.NewSchemaValidator(importer),
+	}
+
 	testCases := []struct {
 		desc   string
 		input  map[string]interface{}
@@ -55,7 +64,7 @@ func TestCompile(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			output, err := Compile(tC.input)
+			output, err := compiler.Compile(tC.input)
 			internal.ErrorsMatch(t, tC.err, err)
 			assert.Equal(t, tC.output, output)
 		})

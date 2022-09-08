@@ -1,0 +1,6 @@
+type: object
+properties:
+  business_id:
+    type: edge
+  name:
+    type: edge

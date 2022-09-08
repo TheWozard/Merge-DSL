@@ -2,8 +2,8 @@ package merge_test
 
 import (
 	"merge-dsl/pkg/cursor"
-	"merge-dsl/pkg/cursor/validator"
 	. "merge-dsl/pkg/merge"
+	"merge-dsl/pkg/reference"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,6 +11,14 @@ import (
 )
 
 func TestResolve(t *testing.T) {
+	importer := reference.Resolver{
+		reference.SchemaPrefix: (&reference.FileClient{Root: "../resources/schemas"}).Import,
+	}
+	compiler := Compiler{
+		Importer:  importer,
+		Validator: reference.NewSchemaValidator(importer),
+	}
+
 	testCases := []struct {
 		desc   string
 		def    map[string]interface{}
@@ -23,8 +31,8 @@ func TestResolve(t *testing.T) {
 			def: map[string]interface{}{
 				"type": "edge",
 			},
-			docs:   cursor.CursorSet[cursor.RawData]{Set: []cursor.RawCursor{}},
-			rules:  cursor.CursorSet[cursor.SchemaData]{Set: []cursor.SchemaCursor{}},
+			docs:   cursor.CursorSet[cursor.RawData]{},
+			rules:  cursor.CursorSet[cursor.SchemaData]{},
 			output: nil,
 		},
 		{
@@ -32,10 +40,10 @@ func TestResolve(t *testing.T) {
 			def: map[string]interface{}{
 				"type": "edge",
 			},
-			docs: cursor.CursorSet[cursor.RawData]{Set: []cursor.RawCursor{
+			docs: cursor.CursorSet[cursor.RawData]{
 				cursor.NewRawCursor("some data"),
-			}, Validator: validator.NonNil},
-			rules:  cursor.CursorSet[cursor.SchemaData]{Set: []cursor.SchemaCursor{}},
+			},
+			rules:  cursor.CursorSet[cursor.SchemaData]{},
 			output: "some data",
 		},
 		{
@@ -43,18 +51,18 @@ func TestResolve(t *testing.T) {
 			def: map[string]interface{}{
 				"type": "edge",
 			},
-			docs: cursor.CursorSet[cursor.RawData]{Set: []cursor.RawCursor{
+			docs: cursor.CursorSet[cursor.RawData]{
 				cursor.NewRawCursor(nil),
 				cursor.NewRawCursor("low priority"),
 				cursor.NewRawCursor("not used"),
-			}, Validator: validator.NonNil},
-			rules:  cursor.CursorSet[cursor.SchemaData]{Set: []cursor.SchemaCursor{}},
+			},
+			rules:  cursor.CursorSet[cursor.SchemaData]{},
 			output: "low priority",
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			def, err := Compile(tC.def)
+			def, err := compiler.Compile(tC.def)
 			require.Nil(t, err)
 			output, err := def.Resolve(tC.docs, tC.rules)
 			assert.Nil(t, err)
