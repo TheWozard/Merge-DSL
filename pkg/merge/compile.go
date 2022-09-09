@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"merge-dsl/pkg/cursor"
 	"merge-dsl/pkg/reference"
+
+	"github.com/mitchellh/mapstructure"
 )
 
 const (
@@ -113,6 +115,7 @@ func (a *arrayTraversal) compile(current cursor.SchemaCursor, data map[string]in
 	return nil
 }
 
-func (l *edgeTraversal) compile(current cursor.SchemaCursor, data map[string]interface{}) error {
+func (e *edgeTraversal) compile(current cursor.SchemaCursor, data map[string]interface{}) error {
+	mapstructure.Decode(data, e)
 	return nil
 }

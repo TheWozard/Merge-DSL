@@ -11,14 +11,14 @@ func TestIndexCursorsById(t *testing.T) {
 	t.Run("nil_input", func(t *testing.T) {
 		index := map[interface{}][]cursor.RawCursor{}
 		var cursors []cursor.RawCursor
-		extra := cursor.PopulateIndexCursorsById(cursors, nil, index)
+		_, extra := cursor.PopulateIndexCursorsById(cursors, nil, index)
 		assert.Equal(t, map[interface{}][]cursor.RawCursor{}, index)
 		assert.Equal(t, []cursor.RawCursor{}, extra)
 	})
 
 	t.Run("nil_parser", func(t *testing.T) {
 		index := map[interface{}][]cursor.RawCursor{}
-		extra := cursor.PopulateIndexCursorsById([]cursor.RawCursor{
+		_, extra := cursor.PopulateIndexCursorsById([]cursor.RawCursor{
 			cursor.NewRawCursor(map[string]interface{}{"id": 1}),
 		}, nil, index)
 		assert.Equal(t, map[interface{}][]cursor.RawCursor{}, index)

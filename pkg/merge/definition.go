@@ -25,6 +25,6 @@ type (
 	}
 
 	edgeTraversal struct {
-		// allowNull bool
+		Default interface{} `mapstructure:"default"`
 	}
 )

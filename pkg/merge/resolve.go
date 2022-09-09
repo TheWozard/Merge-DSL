@@ -36,11 +36,12 @@ func (o *objectTraversal) resolve(documents DocumentCursorSet, rules RulesCursor
 
 func (a *arrayTraversal) resolve(documents DocumentCursorSet, rules RulesCursorSet) (interface{}, error) {
 	result := []interface{}{}
-	index, extra := documents.GetIdsAndExtra(cursor.DefaultRawIndexer)
-	rules_index, _ := rules.GetIdsAndExtra(cursor.DefaultSchemaIndexer)
+	index, order, extra := documents.GetIdsAndExtra(cursor.DefaultRawIndexer)
+	rules_index, _, _ := rules.GetIdsAndExtra(cursor.DefaultSchemaIndexer)
 	rules_default := rules.GetDefault()
 	if !a.excludeId {
-		for id, set := range index {
+		for _, id := range order {
+			set := index[id]
 			id_rules, ok := rules_index[id]
 			if !ok {
 				id_rules = rules_default
@@ -80,6 +81,10 @@ func (a *arrayTraversal) resolve(documents DocumentCursorSet, rules RulesCursorS
 	return nil, nil
 }
 
-func (l *edgeTraversal) resolve(documents DocumentCursorSet, rules RulesCursorSet) (interface{}, error) {
-	return documents.Value(validator.NonNil), nil
+func (e *edgeTraversal) resolve(documents DocumentCursorSet, rules RulesCursorSet) (interface{}, error) {
+	value := documents.Value(validator.NonNil)
+	if e.Default != nil && value == nil {
+		return e.Default, nil
+	}
+	return value, nil
 }

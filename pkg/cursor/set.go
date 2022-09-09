@@ -44,11 +44,14 @@ func (s CursorSet[T]) GetItems() []CursorSet[T] {
 	return result
 }
 
-func (s CursorSet[T]) GetIdsAndExtra(parser IdParser[T]) (map[interface{}]CursorSet[T], []CursorSet[T]) {
+func (s CursorSet[T]) GetIdsAndExtra(parser IdParser[T]) (map[interface{}]CursorSet[T], []interface{}, []CursorSet[T]) {
 	extra := []CursorSet[T]{}
+	order := []interface{}{}
 	index := map[interface{}][]Cursor[T]{}
 	for _, cursor := range s {
-		for _, extra_cursor := range PopulateIndexCursorsById(cursor.GetItems(), parser, index) {
+		added_order, extra_cursors := PopulateIndexCursorsById(cursor.GetItems(), parser, index)
+		order = append(order, added_order...)
+		for _, extra_cursor := range extra_cursors {
 			extra = append(extra, s.NewSet(extra_cursor))
 		}
 	}
@@ -56,7 +59,7 @@ func (s CursorSet[T]) GetIdsAndExtra(parser IdParser[T]) (map[interface{}]Cursor
 	for id, set := range index {
 		result[id] = s.NewSet(set...)
 	}
-	return result, extra
+	return result, order, extra
 }
 
 func (s CursorSet[T]) GetDefault() CursorSet[T] {

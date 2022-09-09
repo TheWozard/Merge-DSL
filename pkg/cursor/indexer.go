@@ -5,16 +5,19 @@ var (
 	DefaultSchemaIndexer = SchemaCursorIdParser{Key: "id"}
 )
 
-// PopulateIndexCursorsById indexes a slice of cursors based on the parser. Returns any cursors that do not contain an id
-// in an extra slice.
-func PopulateIndexCursorsById[T any](cursors []Cursor[T], parser IdParser[T], index map[interface{}][]Cursor[T]) []Cursor[T] {
+// PopulateIndexCursorsById indexes a slice of cursors based on the parser.
+// Returns a list of the order of the ids as received from the cursors. Will not return ids that already existed in the index.
+// Returns any cursors that do not contain an id in an extra slice.
+func PopulateIndexCursorsById[T any](cursors []Cursor[T], parser IdParser[T], index map[interface{}][]Cursor[T]) ([]interface{}, []Cursor[T]) {
 	extras := []Cursor[T]{}
+	// We need to preserve order of ids despite
+	ids := []interface{}{}
 	// Panic safety
 	if len(cursors) == 0 {
-		return extras
+		return ids, extras
 	}
 	if parser == nil {
-		return cursors
+		return ids, cursors
 	}
 	// Indexing
 	for _, cursor := range cursors {
@@ -23,6 +26,7 @@ func PopulateIndexCursorsById[T any](cursors []Cursor[T], parser IdParser[T], in
 				sets, ok := index[id]
 				if !ok {
 					sets = []Cursor[T]{}
+					ids = append(ids, id)
 				}
 				sets = append(sets, cursor)
 				index[id] = sets
@@ -31,7 +35,7 @@ func PopulateIndexCursorsById[T any](cursors []Cursor[T], parser IdParser[T], in
 			}
 		}
 	}
-	return extras
+	return ids, extras
 }
 
 // RawCursorIdParser gets an id from a cursor based on GetKey.
@@ -54,7 +58,8 @@ func (k RawCursorIdParser[T]) Parse(cursor Cursor[T]) interface{} {
 
 func (k RawCursorIdParser[T]) Index(cursors []Cursor[T]) (map[interface{}][]Cursor[T], []Cursor[T]) {
 	index := map[interface{}][]Cursor[T]{}
-	return index, PopulateIndexCursorsById[T](cursors, k, index)
+	_, extra := PopulateIndexCursorsById[T](cursors, k, index)
+	return index, extra
 }
 
 // SchemaCursorIdParser gets an id from the value of the passed cursor.
@@ -74,5 +79,6 @@ func (s SchemaCursorIdParser) Parse(cursor SchemaCursor) interface{} {
 
 func (s SchemaCursorIdParser) Index(cursors []SchemaCursor) (map[interface{}][]SchemaCursor, []SchemaCursor) {
 	index := map[interface{}][]SchemaCursor{}
-	return index, PopulateIndexCursorsById[SchemaData](cursors, s, index)
+	_, extra := PopulateIndexCursorsById[SchemaData](cursors, s, index)
+	return index, extra
 }

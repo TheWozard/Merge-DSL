@@ -4,3 +4,39 @@ properties:
     type: edge
   name:
     type: edge
+  address:
+    type: object
+    properties:
+      line:
+        type: edge
+      city:
+        type: edge
+      county:
+        type: edge
+      state:
+        type: edge
+  reviews:
+    type: object
+    properties:
+      stars:
+        type: edge
+        default: 0
+      count:
+        type: edge
+        default: 0
+      negatives:
+        type: edge
+        default: 0
+  products:
+    type: array
+    default:
+      type: object
+      properties:
+        name:
+          type: edge
+        reviews:
+          type: object
+          properties:
+            count:
+              type: edge
+              default: 0
