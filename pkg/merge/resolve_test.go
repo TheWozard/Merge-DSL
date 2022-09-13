@@ -22,8 +22,8 @@ func TestResolve(t *testing.T) {
 	testCases := []struct {
 		desc   string
 		def    map[string]interface{}
-		docs   cursor.CursorSet[cursor.RawData]
-		rules  cursor.CursorSet[cursor.SchemaData]
+		docs   cursor.Set[interface{}]
+		rules  cursor.Set[cursor.SchemaData]
 		output interface{}
 	}{
 		{
@@ -31,8 +31,8 @@ func TestResolve(t *testing.T) {
 			def: map[string]interface{}{
 				"type": "edge",
 			},
-			docs:   cursor.CursorSet[cursor.RawData]{},
-			rules:  cursor.CursorSet[cursor.SchemaData]{},
+			docs:   cursor.Set[interface{}]{},
+			rules:  cursor.Set[cursor.SchemaData]{},
 			output: nil,
 		},
 		{
@@ -40,10 +40,10 @@ func TestResolve(t *testing.T) {
 			def: map[string]interface{}{
 				"type": "edge",
 			},
-			docs: cursor.CursorSet[cursor.RawData]{
+			docs: cursor.Set[interface{}]{
 				cursor.NewRawCursor("some data"),
 			},
-			rules:  cursor.CursorSet[cursor.SchemaData]{},
+			rules:  cursor.Set[cursor.SchemaData]{},
 			output: "some data",
 		},
 		{
@@ -51,12 +51,12 @@ func TestResolve(t *testing.T) {
 			def: map[string]interface{}{
 				"type": "edge",
 			},
-			docs: cursor.CursorSet[cursor.RawData]{
+			docs: cursor.Set[interface{}]{
 				cursor.NewRawCursor(nil),
 				cursor.NewRawCursor("low priority"),
 				cursor.NewRawCursor("not used"),
 			},
-			rules:  cursor.CursorSet[cursor.SchemaData]{},
+			rules:  cursor.Set[cursor.SchemaData]{},
 			output: "low priority",
 		},
 	}

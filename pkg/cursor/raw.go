@@ -2,42 +2,54 @@ package cursor
 
 type (
 	rawMapCursorPointer struct {
-		nodes map[string]interface{}
+		parent Cursor[interface{}]
+		nodes  map[string]interface{}
 	}
 	rawSliceCursorPointer struct {
-		items []interface{}
+		parent Cursor[interface{}]
+		items  []interface{}
 	}
 	rawEdgeCursorPointer struct {
-		data interface{}
+		parent Cursor[interface{}]
+		data   interface{}
 	}
 )
 
-// NewRawCursor converts raw golang struct based on json data into a traversable tree
-func NewRawCursor(raw interface{}) RawCursor {
+// NewRawCursor starts a cursor pointing to an interface.
+func NewRawCursor(raw interface{}) Cursor[interface{}] {
+	return NewRawCursorFrom(raw, nil)
+}
+
+// NewRawCursorFrom starts a cursor pointing to an interface that came from the passed parent.
+func NewRawCursorFrom(raw interface{}, parent Cursor[interface{}]) Cursor[interface{}] {
 	switch typed := raw.(type) {
 	case map[string]interface{}:
-		return rawMapCursorPointer{nodes: typed}
+		return rawMapCursorPointer{nodes: typed, parent: parent}
 	case []interface{}:
-		return rawSliceCursorPointer{items: typed}
+		return rawSliceCursorPointer{items: typed, parent: parent}
 	}
-	return rawEdgeCursorPointer{data: raw}
+	return rawEdgeCursorPointer{data: raw, parent: parent}
 }
 
 /*
  * rawMapCursorPointer
  */
 
-func (m rawMapCursorPointer) IsEdge() bool {
-	return false
+func (m rawMapCursorPointer) Parent() Cursor[interface{}] {
+	return m.parent
+}
+
+func (m rawMapCursorPointer) HasChildren() bool {
+	return len(m.nodes) > 0
 }
 
 func (m rawMapCursorPointer) Value() interface{} {
 	return m.nodes
 }
 
-func (m rawMapCursorPointer) GetKey(key string) RawCursor {
+func (m rawMapCursorPointer) GetKey(key string) Cursor[interface{}] {
 	if data, ok := m.nodes[key]; ok {
-		return NewRawCursor(data)
+		return NewRawCursorFrom(data, m)
 	}
 	return nil
 }
@@ -50,11 +62,11 @@ func (m rawMapCursorPointer) GetKeys() []string {
 	return result
 }
 
-func (m rawMapCursorPointer) GetItems() []RawCursor {
-	return []RawCursor{}
+func (m rawMapCursorPointer) GetItems() []Cursor[interface{}] {
+	return []Cursor[interface{}]{}
 }
 
-func (m rawMapCursorPointer) GetDefault() RawCursor {
+func (m rawMapCursorPointer) GetDefault() Cursor[interface{}] {
 	return nil
 }
 
@@ -62,15 +74,19 @@ func (m rawMapCursorPointer) GetDefault() RawCursor {
  * rawSliceCursorPointer
  */
 
-func (s rawSliceCursorPointer) IsEdge() bool {
-	return false
+func (s rawSliceCursorPointer) Parent() Cursor[interface{}] {
+	return s.parent
+}
+
+func (s rawSliceCursorPointer) HasChildren() bool {
+	return len(s.items) > 0
 }
 
 func (s rawSliceCursorPointer) Value() interface{} {
 	return s.items
 }
 
-func (s rawSliceCursorPointer) GetKey(key string) RawCursor {
+func (s rawSliceCursorPointer) GetKey(key string) Cursor[interface{}] {
 	return nil
 }
 
@@ -78,15 +94,15 @@ func (s rawSliceCursorPointer) GetKeys() []string {
 	return []string{}
 }
 
-func (s rawSliceCursorPointer) GetItems() []RawCursor {
-	items := []RawCursor{}
+func (s rawSliceCursorPointer) GetItems() []Cursor[interface{}] {
+	items := []Cursor[interface{}]{}
 	for _, item := range s.items {
-		items = append(items, NewRawCursor(item))
+		items = append(items, NewRawCursorFrom(item, s))
 	}
 	return items
 }
 
-func (s rawSliceCursorPointer) GetDefault() RawCursor {
+func (s rawSliceCursorPointer) GetDefault() Cursor[interface{}] {
 	return nil
 }
 
@@ -94,15 +110,19 @@ func (s rawSliceCursorPointer) GetDefault() RawCursor {
  * rawEdgeCursorPointer
  */
 
-func (e rawEdgeCursorPointer) IsEdge() bool {
-	return true
+func (e rawEdgeCursorPointer) Parent() Cursor[interface{}] {
+	return e.parent
+}
+
+func (e rawEdgeCursorPointer) HasChildren() bool {
+	return false
 }
 
 func (e rawEdgeCursorPointer) Value() interface{} {
 	return e.data
 }
 
-func (e rawEdgeCursorPointer) GetKey(key string) RawCursor {
+func (e rawEdgeCursorPointer) GetKey(key string) Cursor[interface{}] {
 	return nil
 }
 
@@ -110,10 +130,10 @@ func (e rawEdgeCursorPointer) GetKeys() []string {
 	return []string{}
 }
 
-func (e rawEdgeCursorPointer) GetItems() []RawCursor {
-	return []RawCursor{}
+func (e rawEdgeCursorPointer) GetItems() []Cursor[interface{}] {
+	return []Cursor[interface{}]{}
 }
 
-func (e rawEdgeCursorPointer) GetDefault() RawCursor {
+func (e rawEdgeCursorPointer) GetDefault() Cursor[interface{}] {
 	return nil
 }

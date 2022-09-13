@@ -6,16 +6,33 @@ import (
 )
 
 func TestNewRawCursor(t *testing.T) {
+	parent := cursor.NewRawCursor("parent")
+
 	testCases := []struct {
 		desc  string
-		input interface{}
+		input cursor.Cursor[interface{}]
 		cases CursorCase[interface{}]
 	}{
 		{
-			desc:  "string",
-			input: "data",
+			desc:  "edge",
+			input: cursor.NewRawCursorFrom("edge", parent),
 			cases: CursorCase[interface{}]{
-				IsEdge: true, Value: "data",
+				Parent: parent, HasChildren: false,
+				Value: "edge",
+				Key: map[string]cursor.Cursor[interface{}]{
+					"anything": nil,
+				},
+				Keys:    []string{},
+				Items:   []cursor.Cursor[interface{}]{},
+				Default: nil,
+			},
+		},
+		{
+			desc:  "map_empty",
+			input: cursor.NewRawCursorFrom(map[string]interface{}{}, parent),
+			cases: CursorCase[interface{}]{
+				Parent: parent, HasChildren: false,
+				Value: map[string]interface{}{},
 				Key: map[string]cursor.Cursor[interface{}]{
 					"anything": nil,
 				},
@@ -26,15 +43,18 @@ func TestNewRawCursor(t *testing.T) {
 		},
 		{
 			desc: "map",
-			input: map[string]interface{}{
+			input: cursor.NewRawCursorFrom(map[string]interface{}{
 				"text": "data",
-			},
+			}, parent),
 			cases: CursorCase[interface{}]{
-				IsEdge: false, Value: map[string]interface{}{
+				Parent: parent, HasChildren: true,
+				Value: map[string]interface{}{
 					"text": "data",
 				},
 				Key: map[string]cursor.Cursor[interface{}]{
-					"text":     cursor.NewRawCursor("data"),
+					"text": cursor.NewRawCursorFrom("data", cursor.NewRawCursorFrom(map[string]interface{}{
+						"text": "data",
+					}, parent)),
 					"anything": nil,
 				},
 				Keys:    []string{"text"},
@@ -43,15 +63,28 @@ func TestNewRawCursor(t *testing.T) {
 			},
 		},
 		{
-			desc: "slice",
-			input: []interface{}{
-				map[string]interface{}{
-					"id": 0,
-				},
-				"stringy",
-			},
+			desc:  "slice_empty",
+			input: cursor.NewRawCursorFrom([]interface{}{}, parent),
 			cases: CursorCase[interface{}]{
-				IsEdge: false, Value: []interface{}{
+				Parent: parent, HasChildren: false,
+				Value: []interface{}{},
+				Key: map[string]cursor.Cursor[interface{}]{
+					"anything": nil,
+				},
+				Keys:    []string{},
+				Items:   []cursor.Cursor[interface{}]{},
+				Default: nil,
+			},
+		},
+		{
+			desc: "slice",
+			input: cursor.NewRawCursorFrom([]interface{}{
+				map[string]interface{}{"id": 0},
+				"stringy",
+			}, parent),
+			cases: CursorCase[interface{}]{
+				Parent: parent, HasChildren: true,
+				Value: []interface{}{
 					map[string]interface{}{"id": 0},
 					"stringy",
 				},
@@ -60,8 +93,18 @@ func TestNewRawCursor(t *testing.T) {
 				},
 				Keys: []string{},
 				Items: []cursor.Cursor[interface{}]{
-					cursor.NewRawCursor(map[string]interface{}{"id": 0}),
-					cursor.NewRawCursor("stringy"),
+					cursor.NewRawCursorFrom(map[string]interface{}{"id": 0},
+						cursor.NewRawCursorFrom([]interface{}{
+							map[string]interface{}{"id": 0},
+							"stringy",
+						}, parent),
+					),
+					cursor.NewRawCursorFrom("stringy",
+						cursor.NewRawCursorFrom([]interface{}{
+							map[string]interface{}{"id": 0},
+							"stringy",
+						}, parent),
+					),
 				},
 				Default: nil,
 			},
@@ -69,7 +112,7 @@ func TestNewRawCursor(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			CursorTestSuite(t, cursor.NewRawCursor(tC.input), tC.cases)
+			CursorTestSuite(t, tC.input, tC.cases)
 		})
 	}
 }

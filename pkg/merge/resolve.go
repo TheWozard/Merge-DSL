@@ -3,13 +3,12 @@ package merge
 import (
 	"fmt"
 	"merge-dsl/pkg/cursor"
-	"merge-dsl/pkg/cursor/validator"
 )
 
 type (
-	DocumentCursorSet = cursor.CursorSet[cursor.RawData]
-	// Turn into a struct for RulesData
-	RulesCursorSet = cursor.CursorSet[cursor.SchemaData]
+	DocumentCursorSet = cursor.Set[interface{}]
+	// TODO: Turn into a struct for RulesData
+	RulesCursorSet = cursor.Set[cursor.SchemaData]
 )
 
 func (d Definition) Resolve(documents DocumentCursorSet, rules RulesCursorSet) (interface{}, error) {
@@ -36,44 +35,29 @@ func (o *objectTraversal) resolve(documents DocumentCursorSet, rules RulesCursor
 
 func (a *arrayTraversal) resolve(documents DocumentCursorSet, rules RulesCursorSet) (interface{}, error) {
 	result := []interface{}{}
-	index, order, extra := documents.GetIdsAndExtra(cursor.DefaultRawIndexer)
-	rules_index, _, _ := rules.GetIdsAndExtra(cursor.DefaultSchemaIndexer)
+	grouped_nodes := documents.GetGroupedItems(cursor.DefaultRawGrouper)
+	rules_index, _ := rules.GetIndexedItems(cursor.DefaultSchemaGrouper)
 	rules_default := rules.GetDefault()
-	if !a.excludeId {
-		for _, id := range order {
-			set := index[id]
-			id_rules, ok := rules_index[id]
-			if !ok {
-				id_rules = rules_default
+	for _, nodes := range grouped_nodes {
+		id := cursor.DefaultRawGrouper(nodes[0])
+		traversal := a.defaultTraversal
+		rules := rules_default
+		if (id == nil && a.requireId) || (id != nil && a.excludeId) {
+			continue
+		}
+		if id != nil && !a.excludeId {
+			if id_traversal, ok := a.idTraversals[id]; ok {
+				traversal = id_traversal
 			}
-			traversal, ok := a.idTraversals[id]
-			if !ok {
-				traversal = a.defaultTraversal
-			}
-			if traversal != nil {
-				value, err := traversal.resolve(set, id_rules)
-				if err != nil {
-					return nil, fmt.Errorf("[%s].%w", id, err)
-				}
-				// TODO: Run Rules
-				if a.allowNull || value != nil {
-					result = append(result, value)
-				}
+			if rules_id, ok := rules_index[id]; ok {
+				rules = append(rules, rules_id...)
 			}
 		}
-	}
-	if !a.requireId {
-		for i, set := range extra {
-			value, err := a.defaultTraversal.resolve(set, rules_default)
-			if err != nil {
-				return nil, fmt.Errorf("[%d].%w", i, err)
-			}
-			// TODO: Run Rules
-			if a.allowNull || value != nil {
-				result = append(result, value)
-			}
-
+		value, err := traversal.resolve(nodes, rules)
+		if err != nil {
+			return nil, err
 		}
+		result = append(result, value)
 	}
 	if a.allowEmpty || len(result) > 0 {
 		return result, nil
@@ -82,7 +66,7 @@ func (a *arrayTraversal) resolve(documents DocumentCursorSet, rules RulesCursorS
 }
 
 func (e *edgeTraversal) resolve(documents DocumentCursorSet, rules RulesCursorSet) (interface{}, error) {
-	value := documents.Value(validator.NonNil)
+	value, _ := documents.Value(cursor.ValidateNonNil)
 	if e.Default != nil && value == nil {
 		return e.Default, nil
 	}

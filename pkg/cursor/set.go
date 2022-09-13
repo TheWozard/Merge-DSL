@@ -1,73 +1,70 @@
 package cursor
 
-// CursorSet makes handling a list of cursors easier.
-type CursorSet[T any] []Cursor[T]
+// Set makes handling a list of cursors easier.
+type Set[T any] []Cursor[T]
 
-func (s CursorSet[T]) NewSet(set ...Cursor[T]) CursorSet[T] {
-	return set
-}
-
-func (s CursorSet[T]) IsEdge() bool {
-	if len(s) > 0 {
-		return s[0].IsEdge()
-	}
-	return true
-}
-
-func (s CursorSet[T]) Value(validator func(T) bool) T {
+// Value gets the first value in the set that passes the validator.
+// if not value is found the second value returns false.
+func (s Set[T]) Value(validator Validator[T]) (T, bool) {
 	for _, cursor := range s {
 		if value := cursor.Value(); validator(value) {
-			return value
+			return value, true
 		}
 	}
 	var empty T
-	return empty
+	return empty, false
 }
 
-func (s CursorSet[T]) GetKey(key string) CursorSet[T] {
-	sets := []Cursor[T]{}
+// GetKey creates a new Set based on the results of traversing all cursors in the current set
+// to the given key. Any cursors that become nil are dropped.
+func (s Set[T]) GetKey(key string) Set[T] {
+	cursors := []Cursor[T]{}
 	for _, cursor := range s {
 		if next := cursor.GetKey(key); next != nil {
-			sets = append(sets, next)
+			cursors = append(cursors, next)
 		}
 	}
-	return s.NewSet(sets...)
+	return Set[T](cursors)
 }
 
-func (s CursorSet[T]) GetItems() []CursorSet[T] {
-	result := []CursorSet[T]{}
+// GetItems creates a slice of all items for all cursors in order.
+func (s Set[T]) GetItems() []Cursor[T] {
+	cursors := []Cursor[T]{}
 	for _, cursor := range s {
-		for _, child := range cursor.GetItems() {
-			result = append(result, s.NewSet(child))
-		}
+		cursors = append(cursors, cursor.GetItems()...)
 	}
-	return result
+	return cursors
 }
 
-func (s CursorSet[T]) GetIdsAndExtra(parser IdParser[T]) (map[interface{}]CursorSet[T], []interface{}, []CursorSet[T]) {
-	extra := []CursorSet[T]{}
-	order := []interface{}{}
-	index := map[interface{}][]Cursor[T]{}
-	for _, cursor := range s {
-		added_order, extra_cursors := PopulateIndexCursorsById(cursor.GetItems(), parser, index)
-		order = append(order, added_order...)
-		for _, extra_cursor := range extra_cursors {
-			extra = append(extra, s.NewSet(extra_cursor))
-		}
+// GetGroupedItems groups GetItems into a slice Sets of grouped cursors based on the grouper
+func (s Set[T]) GetGroupedItems(grouper Grouper[T]) []Set[T] {
+	final := []Set[T]{}
+	groups := GroupCursors(s.GetItems(), grouper)
+	for _, group := range groups {
+		final = append(final, Set[T](group))
 	}
-	result := make(map[interface{}]CursorSet[T], len(index))
-	for id, set := range index {
-		result[id] = s.NewSet(set...)
-	}
-	return result, order, extra
+	return final
 }
 
-func (s CursorSet[T]) GetDefault() CursorSet[T] {
+func (s Set[T]) GetIndexedItems(grouper Grouper[T]) (map[interface{}]Set[T], []Set[T]) {
+	final_extra := []Set[T]{}
+	final_index := map[interface{}]Set[T]{}
+	index, extra := IndexCursors(s.GetItems(), grouper)
+	for key, cursors := range index {
+		final_index[key] = Set[T](cursors)
+	}
+	for _, extra := range extra {
+		final_extra = append(final_extra, Set[T]{extra})
+	}
+	return final_index, final_extra
+}
+
+func (s Set[T]) GetDefault() Set[T] {
 	result := []Cursor[T]{}
 	for _, cursor := range s {
 		if def := cursor.GetDefault(); def != nil {
 			result = append(result, def)
 		}
 	}
-	return s.NewSet(result...)
+	return Set[T](result)
 }

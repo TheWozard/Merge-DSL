@@ -6,8 +6,8 @@ import (
 )
 
 type (
-	DataSet  = cursor.CursorSet[cursor.RawData]
-	RulesSet = cursor.CursorSet[cursor.SchemaData]
+	DataSet  = cursor.Set[interface{}]
+	RulesSet = cursor.Set[cursor.SchemaData]
 )
 
 // Resolve converts a passed list of references into their relevant parts.

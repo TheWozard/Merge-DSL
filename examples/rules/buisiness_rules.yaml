@@ -1,0 +1,8 @@
+type: object
+properties:
+  reviews:
+    type: object
+    properties:
+      stars:
+        type: edge
+        default: 0

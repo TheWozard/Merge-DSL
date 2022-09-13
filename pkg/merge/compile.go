@@ -18,6 +18,8 @@ const (
 	EdgeType   = "edge"
 )
 
+type DocumentCursor = cursor.Cursor[cursor.SchemaData]
+
 type Compiler struct {
 	Importer  reference.Resolver
 	Validator *reference.SchemaValidator
@@ -53,7 +55,7 @@ func (c *Compiler) Compile(document map[string]interface{}) (*Definition, error)
 
 // compile uses the type defined on the document to call the right definition compile function
 // used recursively to compile the entire tree.
-func compile(current cursor.SchemaCursor) (traversal, error) {
+func compile(current DocumentCursor) (traversal, error) {
 	value := current.Value()
 	if typ, ok := value[TypeKey].(string); ok {
 		switch typ {
@@ -74,7 +76,7 @@ func compile(current cursor.SchemaCursor) (traversal, error) {
 	return nil, fmt.Errorf("failed to locate type in definition")
 }
 
-func (o *objectTraversal) compile(current cursor.SchemaCursor, data map[string]interface{}) error {
+func (o *objectTraversal) compile(current DocumentCursor, data map[string]interface{}) error {
 	o.nodeTraversals = map[string]traversal{}
 	for _, key := range current.GetKeys() {
 		if nextCursor := current.GetKey(key); nextCursor != nil {
@@ -85,10 +87,10 @@ func (o *objectTraversal) compile(current cursor.SchemaCursor, data map[string]i
 			o.nodeTraversals[key] = compiled
 		}
 	}
-	return nil
+	return mapstructure.Decode(data, o)
 }
 
-func (a *arrayTraversal) compile(current cursor.SchemaCursor, data map[string]interface{}) error {
+func (a *arrayTraversal) compile(current DocumentCursor, data map[string]interface{}) error {
 	if def := current.GetDefault(); def != nil {
 		traversal, err := compile(def)
 		if err != nil {
@@ -96,9 +98,8 @@ func (a *arrayTraversal) compile(current cursor.SchemaCursor, data map[string]in
 		}
 		a.defaultTraversal = traversal
 	}
-
 	a.idTraversals = map[interface{}]traversal{}
-	index, extra := cursor.DefaultSchemaIndexer.Index(current.GetItems())
+	index, extra := cursor.IndexCursors[cursor.SchemaData](current.GetItems(), cursor.DefaultSchemaGrouper)
 	if len(extra) > 0 {
 		return fmt.Errorf("unexpected non-id node during array compile")
 	}
@@ -112,10 +113,9 @@ func (a *arrayTraversal) compile(current cursor.SchemaCursor, data map[string]in
 		}
 		a.idTraversals[id] = traversal
 	}
-	return nil
+	return mapstructure.Decode(data, a)
 }
 
-func (e *edgeTraversal) compile(current cursor.SchemaCursor, data map[string]interface{}) error {
-	mapstructure.Decode(data, e)
-	return nil
+func (e *edgeTraversal) compile(current DocumentCursor, data map[string]interface{}) error {
+	return mapstructure.Decode(data, e)
 }
