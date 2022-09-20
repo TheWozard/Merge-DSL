@@ -1,12 +1,14 @@
 package merge
 
+import "merge-dsl/pkg/result"
+
 type (
 	Definition struct {
 		traversal traversal
 	}
 
 	traversal interface {
-		resolve(documents DocumentCursorSet, rules RulesCursorSet) (interface{}, error)
+		resolve(documents DocumentCursorSet, rules RulesCursorSet, ref *result.Ref) error
 	}
 
 	objectTraversal struct {

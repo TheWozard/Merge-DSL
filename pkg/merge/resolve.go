@@ -3,6 +3,7 @@ package merge
 import (
 	"fmt"
 	"merge-dsl/pkg/cursor"
+	"merge-dsl/pkg/result"
 )
 
 type (
@@ -12,32 +13,30 @@ type (
 )
 
 func (d Definition) Resolve(documents DocumentCursorSet, rules RulesCursorSet) (interface{}, error) {
-	return d.traversal.resolve(documents, rules)
+	final, ref := result.NewResult(nil)
+	err := d.traversal.resolve(documents, rules, ref)
+	return *final, err
 }
 
-func (o *objectTraversal) resolve(documents DocumentCursorSet, rules RulesCursorSet) (interface{}, error) {
-	result := map[string]interface{}{}
+func (o *objectTraversal) resolve(documents DocumentCursorSet, rules RulesCursorSet, ref *result.Ref) error {
+	m := ref.Map(o.allowEmpty, o.allowNull)
 	for key, traversal := range o.nodeTraversals {
-		value, err := traversal.resolve(documents.GetKey(key), rules.GetKey(key))
+		ref := m.Key(key)
+		err := traversal.resolve(documents.GetKey(key), rules.GetKey(key), ref)
 		if err != nil {
-			return nil, fmt.Errorf("%s.%w", key, err)
+			return fmt.Errorf("%s.%w", key, err)
 		}
 		// TODO: Run Rules
-		if o.allowNull || value != nil {
-			result[key] = value
-		}
 	}
-	if o.allowEmpty || len(result) > 0 {
-		return result, nil
-	}
-	return nil, nil
+	return nil
 }
 
-func (a *arrayTraversal) resolve(documents DocumentCursorSet, rules RulesCursorSet) (interface{}, error) {
-	result := []interface{}{}
+func (a *arrayTraversal) resolve(documents DocumentCursorSet, rules RulesCursorSet, ref *result.Ref) error {
+	s := ref.Slice(a.allowEmpty, a.allowNull)
 	grouped_nodes := documents.GetGroupedItems(cursor.DefaultRawGrouper)
 	rules_index, _ := rules.GetIndexedItems(cursor.DefaultSchemaGrouper)
 	rules_default := rules.GetDefault()
+	// Sort?
 	for _, nodes := range grouped_nodes {
 		id := cursor.DefaultRawGrouper(nodes[0])
 		traversal := a.defaultTraversal
@@ -53,22 +52,21 @@ func (a *arrayTraversal) resolve(documents DocumentCursorSet, rules RulesCursorS
 				rules = append(rules, rules_id...)
 			}
 		}
-		value, err := traversal.resolve(nodes, rules)
+		ref := s.Append()
+		err := traversal.resolve(nodes, rules, ref)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		result = append(result, value)
 	}
-	if a.allowEmpty || len(result) > 0 {
-		return result, nil
-	}
-	return nil, nil
+	return nil
 }
 
-func (e *edgeTraversal) resolve(documents DocumentCursorSet, rules RulesCursorSet) (interface{}, error) {
+func (e *edgeTraversal) resolve(documents DocumentCursorSet, rules RulesCursorSet, ref *result.Ref) error {
 	value, _ := documents.Value(cursor.ValidateNonNil)
 	if e.Default != nil && value == nil {
-		return e.Default, nil
+		ref.Update(e.Default)
+	} else {
+		ref.Update(value)
 	}
-	return value, nil
+	return nil
 }
