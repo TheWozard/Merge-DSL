@@ -106,7 +106,9 @@ func BenchmarkExamples(b *testing.B) {
 		docs, rules, _ := resolution.Resolve(tC.documentsRefs, compiler.Importer)
 		b.Run(tC.description, func(b *testing.B) {
 			for n := 0; n < b.N; n++ {
-				def.Resolve(docs, rules)
+				value, err := def.Resolve(docs, rules)
+				require.NotNil(b, value)
+				require.Nil(b, err)
 			}
 		})
 	}

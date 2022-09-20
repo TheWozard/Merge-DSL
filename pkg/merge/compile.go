@@ -99,7 +99,7 @@ func (a *arrayTraversal) compile(current DocumentCursor, data map[string]interfa
 		a.defaultTraversal = traversal
 	}
 	a.idTraversals = map[interface{}]traversal{}
-	index, extra := cursor.IndexCursors[cursor.SchemaData](current.GetItems(), cursor.DefaultSchemaGrouper)
+	index, extra := cursor.IndexCursors(current.GetItems(), cursor.DefaultSchemaGrouper)
 	if len(extra) > 0 {
 		return fmt.Errorf("unexpected non-id node during array compile")
 	}
