@@ -92,8 +92,7 @@ func TestExamples(t *testing.T) {
 			require.Nil(t, err)
 			docs, rules, err := resolution.Resolve(tC.documentsRefs, compiler.Importer)
 			require.Nil(t, err)
-			output, err := def.Resolve(docs, rules)
-			require.Nil(t, err)
+			output := def.Resolve(docs, rules)
 			require.Equal(t, tC.output, output)
 		})
 	}
@@ -105,9 +104,8 @@ func BenchmarkExamples(b *testing.B) {
 		docs, rules, _ := resolution.Resolve(tC.documentsRefs, compiler.Importer)
 		b.Run(tC.description, func(b *testing.B) {
 			for n := 0; n < b.N; n++ {
-				value, err := def.Resolve(docs, rules)
+				value := def.Resolve(docs, rules)
 				require.NotNil(b, value)
-				require.Nil(b, err)
 			}
 		})
 	}
