@@ -1,7 +1,6 @@
 package merge
 
 import (
-	"fmt"
 	"merge-dsl/pkg/cursor"
 	"merge-dsl/pkg/result"
 )
@@ -12,40 +11,38 @@ type (
 	RulesCursorSet = cursor.Set[cursor.SchemaData]
 )
 
-func (d Definition) Resolve(documents DocumentCursorSet, rules RulesCursorSet) (interface{}, error) {
+func (d Traversal) Resolve(documents DocumentCursorSet, rules RulesCursorSet) interface{} {
 	final, ref := result.NewResult(nil)
-	err := d.traversal.resolve(documents, rules, ref)
-	return *final, err
+	d.step.resolve(documents, rules, ref)
+	return *final
 }
 
-func (o *objectTraversal) resolve(documents DocumentCursorSet, rules RulesCursorSet, ref *result.Ref) error {
-	m := ref.Map(o.allowEmpty, o.allowNull)
-	for key, traversal := range o.nodeTraversals {
+func (o *objectStep) resolve(documents DocumentCursorSet, rules RulesCursorSet, ref *result.Ref) {
+	m := ref.Map(o.AllowEmpty, o.AllowNull)
+	for key, traversal := range o.nodeSteps {
 		ref := m.Key(key)
-		err := traversal.resolve(documents.GetKey(key), rules.GetKey(key), ref)
-		if err != nil {
-			return fmt.Errorf("%s.%w", key, err)
-		}
-		// TODO: Run Rules
+		traversal.resolve(documents.GetKey(key), rules.GetKey(key), ref)
 	}
-	return nil
+	applyRules(documents, rules, ref)
 }
 
-func (a *arrayTraversal) resolve(documents DocumentCursorSet, rules RulesCursorSet, ref *result.Ref) error {
-	s := ref.Slice(a.allowEmpty, a.allowNull)
-	grouped_nodes := documents.GetGroupedItems(cursor.DefaultRawGrouper)
+func (a *arrayStep) resolve(documents DocumentCursorSet, rules RulesCursorSet, ref *result.Ref) {
+	s := ref.Slice(a.AllowEmpty, a.AllowNull)
+	grouped_nodes := a.sort(documents.GetGroupedItems(cursor.DefaultRawGrouper))
+	// Do we care about alerting about rules without ids? Should we do something about this?
+	// In general we want to succeed when we can.
 	rules_index, _ := rules.GetIndexedItems(cursor.DefaultSchemaGrouper)
 	rules_default := rules.GetDefault()
-	// Sort?
 	for _, nodes := range grouped_nodes {
 		id := cursor.DefaultRawGrouper(nodes[0])
-		traversal := a.defaultTraversal
+		traversal := a.defaultStep
 		rules := rules_default
-		if (id == nil && a.requireId) || (id != nil && a.excludeId) {
+		if (id == nil && a.RequireId) || (id != nil && a.ExcludeId) {
 			continue
 		}
-		if id != nil && !a.excludeId {
-			if id_traversal, ok := a.idTraversals[id]; ok {
+		if id != nil && !a.ExcludeId {
+			// Update rules/traversal with ID data
+			if id_traversal, ok := a.idStep[id]; ok {
 				traversal = id_traversal
 			}
 			if rules_id, ok := rules_index[id]; ok {
@@ -53,20 +50,27 @@ func (a *arrayTraversal) resolve(documents DocumentCursorSet, rules RulesCursorS
 			}
 		}
 		ref := s.Append()
-		err := traversal.resolve(nodes, rules, ref)
-		if err != nil {
-			return err
-		}
+		traversal.resolve(nodes, rules, ref)
 	}
-	return nil
+	applyRules(documents, rules, ref)
 }
 
-func (e *edgeTraversal) resolve(documents DocumentCursorSet, rules RulesCursorSet, ref *result.Ref) error {
+// Sorts the items into the expected order of the step
+func (a *arrayStep) sort(items []cursor.Set[interface{}]) []cursor.Set[interface{}] {
+	// TODO: this
+	return items
+}
+
+func (e *edgeStep) resolve(documents DocumentCursorSet, rules RulesCursorSet, ref *result.Ref) {
 	value, _ := documents.Value(cursor.ValidateNonNil)
 	if e.Default != nil && value == nil {
 		ref.Update(e.Default)
 	} else {
 		ref.Update(value)
 	}
-	return nil
+	applyRules(documents, rules, ref)
+}
+
+func applyRules(documents DocumentCursorSet, rules RulesCursorSet, ref *result.Ref) {
+	// TODO: This
 }

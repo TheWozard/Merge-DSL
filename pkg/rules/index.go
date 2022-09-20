@@ -1,9 +1,12 @@
 package rules
 
-import "merge-dsl/pkg/cursor"
+import (
+	"merge-dsl/pkg/cursor"
+	"merge-dsl/pkg/result"
+)
 
 type Rule interface {
-	Execute(global State, local State)
+	Execute(global State, local State, ref *result.Ref)
 }
 
 type RuleFactory func(map[string]interface{}) Rule

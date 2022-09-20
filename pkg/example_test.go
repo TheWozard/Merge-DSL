@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"merge-dsl/pkg/merge"
 	"merge-dsl/pkg/reference"
 	"merge-dsl/pkg/resolution"
 	"testing"
@@ -12,9 +11,9 @@ import (
 
 var (
 	importer = reference.NewDefaultResolver(
-		"../examples", "./resources/schemas", time.Second*5, "example-test",
+		"../examples", "../resources/schemas", time.Second*5, "example-test",
 	)
-	compiler = merge.Compiler{
+	compiler = reference.Compiler{
 		Importer:  importer,
 		Validator: reference.NewSchemaValidator(importer),
 	}

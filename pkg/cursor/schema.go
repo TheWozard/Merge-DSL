@@ -44,7 +44,7 @@ func NewSchemaCursorFrom(raw SchemaData, parent Cursor[SchemaData]) Cursor[Schem
 			return schemaEdgeCursorPointer{data: raw, parent: parent}
 		}
 	}
-	return nil
+	return schemaEdgeCursorPointer{data: raw, parent: parent}
 }
 
 /*
