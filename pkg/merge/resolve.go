@@ -13,26 +13,28 @@ type (
 
 func (d Traversal) Resolve(documents DocumentCursorSet, rules RulesCursorSet) interface{} {
 	final, ref := result.NewResult(nil)
-	d.step.resolve(documents, rules, ref)
+	state := NewRootState(documents, rules, ref)
+	d.step.resolve(state)
+	state.DelayedActions.Do()
 	return *final
 }
 
-func (o *objectStep) resolve(documents DocumentCursorSet, rules RulesCursorSet, ref *result.Ref) {
-	m := ref.Map(o.AllowEmpty, o.AllowNull)
+func (o *objectStep) resolve(state *State) {
+	m := state.Ref.Map(o.AllowEmpty, o.AllowNull)
 	for key, traversal := range o.nodeSteps {
 		ref := m.Key(key)
-		traversal.resolve(documents.GetKey(key), rules.GetKey(key), ref)
+		traversal.resolve(state.New(state.Documents.GetKey(key), state.Rules.GetKey(key), ref))
 	}
-	applyRules(documents, rules, ref)
+	applyRules(state)
 }
 
-func (a *arrayStep) resolve(documents DocumentCursorSet, rules RulesCursorSet, ref *result.Ref) {
-	s := ref.Slice(a.AllowEmpty, a.AllowNull)
-	grouped_nodes := a.sort(documents.GetGroupedItems(cursor.DefaultRawGrouper))
+func (a *arrayStep) resolve(state *State) {
+	s := state.Ref.Slice(a.AllowEmpty, a.AllowNull)
+	grouped_nodes := a.sort(state.Documents.GetGroupedItems(cursor.DefaultRawGrouper))
 	// Do we care about alerting about rules without ids? Should we do something about this?
 	// In general we want to succeed when we can.
-	rules_index, _ := rules.GetIndexedItems(cursor.DefaultSchemaGrouper)
-	rules_default := rules.GetDefault()
+	rules_index, _ := state.Rules.GetIndexedItems(cursor.DefaultSchemaGrouper)
+	rules_default := state.Rules.GetDefault()
 	for _, nodes := range grouped_nodes {
 		id := cursor.DefaultRawGrouper(nodes[0])
 		traversal := a.defaultStep
@@ -50,9 +52,9 @@ func (a *arrayStep) resolve(documents DocumentCursorSet, rules RulesCursorSet, r
 			}
 		}
 		ref := s.Append()
-		traversal.resolve(nodes, rules, ref)
+		traversal.resolve(state.New(nodes, rules, ref))
 	}
-	applyRules(documents, rules, ref)
+	applyRules(state)
 }
 
 // Sorts the items into the expected order of the step
@@ -61,16 +63,22 @@ func (a *arrayStep) sort(items []cursor.Set[interface{}]) []cursor.Set[interface
 	return items
 }
 
-func (e *edgeStep) resolve(documents DocumentCursorSet, rules RulesCursorSet, ref *result.Ref) {
-	value, _ := documents.Value(cursor.ValidateNonNil)
+func (e *edgeStep) resolve(state *State) {
+	value, _ := state.Documents.Value(cursor.ValidateNonNil)
 	if e.Default != nil && value == nil {
-		ref.Update(e.Default)
+		state.Ref.Update(e.Default)
 	} else {
-		ref.Update(value)
+		state.Ref.Update(value)
 	}
-	applyRules(documents, rules, ref)
+	applyRules(state)
 }
 
-func applyRules(documents DocumentCursorSet, rules RulesCursorSet, ref *result.Ref) {
+func (c *calculatedStep) resolve(state *State) {
+	state.DelayedActions.Add(func() {
+		c.Action.Do(state)
+	})
+}
+
+func applyRules(state *State) {
 	// TODO: This
 }

@@ -5,8 +5,6 @@ package cursor
 type Cursor[T any] interface {
 	// General
 
-	// Parent returns the parent node of this cursor. Returns nil when the node has no parent.
-	Parent() Cursor[T]
 	// HasChildren returns if the current node has any children. How to access the children depends on the node.
 	HasChildren() bool
 	// Value returns the current value of the cursor.

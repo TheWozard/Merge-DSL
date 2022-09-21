@@ -199,6 +199,34 @@ func TestResolve(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "calculation",
+			def: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"A": map[string]interface{}{
+						"type":    "edge",
+						"default": 1,
+					},
+					"B": map[string]interface{}{
+						"type":    "edge",
+						"default": 2,
+					},
+					"C": map[string]interface{}{
+						"type":      "calculated",
+						"operation": "add",
+						"keys":      []interface{}{"A", "B"},
+					},
+				},
+			},
+			docs:  cursor.Set[interface{}]{},
+			rules: cursor.Set[cursor.SchemaData]{},
+			output: map[string]interface{}{
+				"A": 1,
+				"B": 2,
+				"C": 3,
+			},
+		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {

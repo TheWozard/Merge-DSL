@@ -30,10 +30,6 @@ type Cursor struct {
 	Factory map[string]RuleFactory
 }
 
-func (c *Cursor) Parent() cursor.Cursor[[]Rule] {
-	return ConvertToRule(c.Cursor.Parent(), c.Factory)
-}
-
 func (c *Cursor) HasChildren() bool {
 	return c.Cursor.HasChildren()
 }

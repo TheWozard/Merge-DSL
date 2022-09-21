@@ -21,7 +21,7 @@ func TestNewSchemaCursor(t *testing.T) {
 				"type": "object",
 			}, parent),
 			cases: CursorCase[map[string]interface{}]{
-				Parent: parent, HasChildren: false,
+				HasChildren: false,
 				Value: map[string]interface{}{
 					"type": "object",
 				},
@@ -40,7 +40,7 @@ func TestNewSchemaCursor(t *testing.T) {
 				"properties": map[string]interface{}{},
 			}, parent),
 			cases: CursorCase[map[string]interface{}]{
-				Parent: parent, HasChildren: false,
+				HasChildren: false,
 				Value: map[string]interface{}{
 					"type":       "object",
 					"properties": map[string]interface{}{},
@@ -64,7 +64,7 @@ func TestNewSchemaCursor(t *testing.T) {
 				},
 			}, parent),
 			cases: CursorCase[map[string]interface{}]{
-				Parent: parent, HasChildren: true,
+				HasChildren: true,
 				Value: map[string]interface{}{
 					"type": "object",
 					"properties": map[string]interface{}{
@@ -97,7 +97,7 @@ func TestNewSchemaCursor(t *testing.T) {
 				"type": "array",
 			}, parent),
 			cases: CursorCase[map[string]interface{}]{
-				Parent: parent, HasChildren: false,
+				HasChildren: false,
 				Value: map[string]interface{}{
 					"type": "array",
 				},
@@ -116,7 +116,7 @@ func TestNewSchemaCursor(t *testing.T) {
 				"items": []interface{}{},
 			}, parent),
 			cases: CursorCase[map[string]interface{}]{
-				Parent: parent, HasChildren: false,
+				HasChildren: false,
 				Value: map[string]interface{}{
 					"type":  "array",
 					"items": []interface{}{},
@@ -138,7 +138,7 @@ func TestNewSchemaCursor(t *testing.T) {
 				},
 			}, parent),
 			cases: CursorCase[map[string]interface{}]{
-				Parent: parent, HasChildren: true,
+				HasChildren: true,
 				Value: map[string]interface{}{
 					"type": "array",
 					"default": map[string]interface{}{
@@ -172,7 +172,7 @@ func TestNewSchemaCursor(t *testing.T) {
 				},
 			}, parent),
 			cases: CursorCase[map[string]interface{}]{
-				Parent: parent, HasChildren: true,
+				HasChildren: true,
 				Value: map[string]interface{}{
 					"type": "array",
 					"items": []interface{}{
@@ -208,7 +208,7 @@ func TestNewSchemaCursor(t *testing.T) {
 				"type": "edge",
 			}, parent),
 			cases: CursorCase[map[string]interface{}]{
-				Parent: parent, HasChildren: false,
+				HasChildren: false,
 				Value: map[string]interface{}{
 					"type": "edge",
 				},

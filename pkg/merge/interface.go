@@ -11,7 +11,17 @@ type (
 	// step defines a part of a resolution process.
 	step interface {
 		// resolve applies the step to the result based on passed data and rules.
-		resolve(documents DocumentCursorSet, rules RulesCursorSet, ref *result.Ref)
+		resolve(state *State)
+	}
+
+	State struct {
+		Parent         *State
+		RootDocuments  DocumentCursorSet
+		RootRules      RulesCursorSet
+		Documents      DocumentCursorSet
+		Rules          RulesCursorSet
+		Ref            *result.Ref
+		DelayedActions *Actions
 	}
 
 	objectStep struct {
@@ -31,5 +41,9 @@ type (
 
 	edgeStep struct {
 		Default interface{} `mapstructure:"default"`
+	}
+
+	calculatedStep struct {
+		Action Operation
 	}
 )

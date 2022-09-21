@@ -3,15 +3,19 @@ package merge
 import (
 	"fmt"
 	"merge-dsl/pkg/cursor"
+	"strings"
 
 	"github.com/mitchellh/mapstructure"
 )
 
 const (
-	TypeKey    = "type"
-	ObjectType = "object"
-	ArrayType  = "array"
-	EdgeType   = "edge"
+	TypeKey        = "type"
+	ObjectType     = "object"
+	ArrayType      = "array"
+	EdgeType       = "edge"
+	CalculatedType = "calculated"
+
+	OperationKey = "operation"
 )
 
 // Compiles the passed golang structure into a ready to use Traversal.
@@ -30,7 +34,7 @@ func Compile(document map[string]interface{}) (*Traversal, error) {
 func compile(current cursor.Cursor[cursor.SchemaData]) (step, error) {
 	value := current.Value()
 	if typ, ok := value[TypeKey].(string); ok {
-		switch typ {
+		switch strings.ToLower(typ) {
 		case ObjectType:
 			def := &objectStep{}
 			return def, def.compile(current)
@@ -40,11 +44,14 @@ func compile(current cursor.Cursor[cursor.SchemaData]) (step, error) {
 		case EdgeType:
 			def := &edgeStep{}
 			return def, def.compile(current)
+		case CalculatedType:
+			def := &calculatedStep{}
+			return def, def.compile(current)
 		default:
-			return nil, fmt.Errorf("unknown compile type '%s'", typ)
+			return nil, FailedLookup(typ, "compilable types")
 		}
 	}
-	return nil, fmt.Errorf("failed to locate type in definition")
+	return nil, MissingFieldError(TypeKey)
 }
 
 func (o *objectStep) compile(current cursor.Cursor[cursor.SchemaData]) error {
@@ -91,4 +98,25 @@ func (a *arrayStep) compile(current cursor.Cursor[cursor.SchemaData]) error {
 
 func (e *edgeStep) compile(current cursor.Cursor[cursor.SchemaData]) error {
 	return mapstructure.Decode(current.Value(), e)
+}
+
+func (c *calculatedStep) compile(current cursor.Cursor[cursor.SchemaData]) error {
+	value := current.Value()
+	if name, ok := value[OperationKey].(string); ok {
+		name = strings.ToLower(name)
+		if op := GetOperation(name, value); op != nil {
+			c.Action = op
+			return nil
+		}
+		return FailedLookup(name, "GetOperation")
+	}
+	return MissingFieldError(OperationKey)
+}
+
+func MissingFieldError(field string) error {
+	return fmt.Errorf("failed to locate field '%s'", field)
+}
+
+func FailedLookup(key, index string) error {
+	return fmt.Errorf("failed to find '%s' in %s", key, index)
 }

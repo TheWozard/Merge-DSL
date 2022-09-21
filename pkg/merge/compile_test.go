@@ -19,7 +19,7 @@ func TestCompile(t *testing.T) {
 			desc:   "empty input",
 			input:  map[string]interface{}{},
 			output: nil,
-			err:    fmt.Errorf("failed to locate type in definition"),
+			err:    fmt.Errorf("failed to locate field 'type'"),
 		},
 		{
 			desc: "unknown type",
@@ -27,7 +27,7 @@ func TestCompile(t *testing.T) {
 				"type": "bad",
 			},
 			output: nil,
-			err:    fmt.Errorf("unknown compile type 'bad'"),
+			err:    fmt.Errorf("failed to find 'bad' in compilable types"),
 		},
 
 		// Positive
@@ -114,6 +114,18 @@ func TestCompile(t *testing.T) {
 				step: &edgeStep{},
 			},
 		},
+		{
+			desc: "calculation",
+			input: map[string]interface{}{
+				"type":        "calculated",
+				"calculation": "add",
+			},
+			output: &Traversal{
+				step: &calculatedStep{
+					Action: &AddOperation{},
+				},
+			},
+		},
 
 		// Negative
 		{
@@ -127,7 +139,7 @@ func TestCompile(t *testing.T) {
 				},
 			},
 			output: nil,
-			err:    fmt.Errorf("failed to compile node 'invalid': unknown compile type 'bad'"),
+			err:    fmt.Errorf("failed to compile node 'invalid': failed to find 'bad' in compilable types"),
 		},
 		{
 			desc: "array default bad",
@@ -138,7 +150,7 @@ func TestCompile(t *testing.T) {
 				},
 			},
 			output: nil,
-			err:    fmt.Errorf("failed to compile default: unknown compile type 'bad'"),
+			err:    fmt.Errorf("failed to compile default: failed to find 'bad' in compilable types"),
 		},
 		{
 			desc: "array no id item",
@@ -165,7 +177,7 @@ func TestCompile(t *testing.T) {
 				},
 			},
 			output: nil,
-			err:    fmt.Errorf("failed to compile id traversal: unknown compile type 'bad'"),
+			err:    fmt.Errorf("failed to compile id traversal: failed to find 'bad' in compilable types"),
 		},
 		{
 			desc: "array multiple instances",
@@ -184,6 +196,23 @@ func TestCompile(t *testing.T) {
 			},
 			output: nil,
 			err:    fmt.Errorf("found 2 instances of the id 'example'"),
+		},
+		{
+			desc: "missing calculation",
+			input: map[string]interface{}{
+				"type": "calculated",
+			},
+			output: nil,
+			err:    fmt.Errorf("failed to locate field 'calculation'"),
+		},
+		{
+			desc: "bad calculation calculation",
+			input: map[string]interface{}{
+				"type":        "calculated",
+				"calculation": "bad",
+			},
+			output: nil,
+			err:    fmt.Errorf("failed to find 'bad' in CalculationLookup"),
 		},
 	}
 	for _, tC := range testCases {
