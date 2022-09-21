@@ -117,8 +117,8 @@ func TestCompile(t *testing.T) {
 		{
 			desc: "calculation",
 			input: map[string]interface{}{
-				"type":        "calculated",
-				"calculation": "add",
+				"type":      "calculated",
+				"operation": "add",
 			},
 			output: &Traversal{
 				step: &calculatedStep{
@@ -198,21 +198,21 @@ func TestCompile(t *testing.T) {
 			err:    fmt.Errorf("found 2 instances of the id 'example'"),
 		},
 		{
-			desc: "missing calculation",
+			desc: "missing operation",
 			input: map[string]interface{}{
 				"type": "calculated",
 			},
 			output: nil,
-			err:    fmt.Errorf("failed to locate field 'calculation'"),
+			err:    fmt.Errorf("failed to locate field 'operation'"),
 		},
 		{
-			desc: "bad calculation calculation",
+			desc: "bad operation",
 			input: map[string]interface{}{
-				"type":        "calculated",
-				"calculation": "bad",
+				"type":      "calculated",
+				"operation": "bad",
 			},
 			output: nil,
-			err:    fmt.Errorf("failed to find 'bad' in CalculationLookup"),
+			err:    fmt.Errorf("failed to find 'bad' in GetOperation"),
 		},
 	}
 	for _, tC := range testCases {
