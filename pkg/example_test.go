@@ -100,12 +100,13 @@ func TestExamples(t *testing.T) {
 
 func BenchmarkExamples(b *testing.B) {
 	for _, tC := range testCases {
-		def, _ := compiler.CompileReference(tC.transformRef)
-		docs, rules, _ := resolution.Resolve(tC.documentsRefs, compiler.Importer)
+		def, err := compiler.CompileReference(tC.transformRef)
+		require.Nil(b, err)
+		docs, rules, err := resolution.Resolve(tC.documentsRefs, compiler.Importer)
+		require.Nil(b, err)
 		b.Run(tC.description, func(b *testing.B) {
 			for n := 0; n < b.N; n++ {
-				value := def.Resolve(docs, rules)
-				require.NotNil(b, value)
+				def.Resolve(docs, rules)
 			}
 		})
 	}
