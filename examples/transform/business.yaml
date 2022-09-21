@@ -18,13 +18,28 @@ properties:
   reviews:
     type: object
     properties:
-      stars:
+      average:
+        type: calculated
+        operation: average
+        points:
+          five_star: 5
+          four_star: 4
+          three_star: 3
+          two_star: 2
+          one_star: 1
+      five_star:
         type: edge
         default: 0
-      count:
+      four_star:
         type: edge
         default: 0
-      negatives:
+      three_star:
+        type: edge
+        default: 0
+      two_star:
+        type: edge
+        default: 0
+      one_star:
         type: edge
         default: 0
   products:

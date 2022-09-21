@@ -1,7 +1,10 @@
 business_id: 1
 reviews:
-  stars: 1.3
-  count: 3000
+  five_star: 5
+  four_star: 3
+  three_star: 1
+  two_star: 5
+  one_star: 10
 products:
   - id: 2
     reviews:

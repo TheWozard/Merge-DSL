@@ -56,9 +56,12 @@ var (
 					"state":  "Colorado",
 				},
 				"reviews": map[string]interface{}{
-					"count":     3000,
-					"negatives": 0,
-					"stars":     1.3,
+					"average":    2.5,
+					"five_star":  5,
+					"four_star":  3,
+					"three_star": 1,
+					"two_star":   5,
+					"one_star":   10,
 				},
 				"products": []interface{}{
 					map[string]interface{}{
