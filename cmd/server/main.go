@@ -31,5 +31,5 @@ func main() {
 	})
 
 	r.Get("/health", config.HealthEndpoint{Config: cfg}.ServeHealth)
-	http.ListenAndServe(":8000", r)
+	http.ListenAndServe(":8000", r) //nolint:errcheck
 }

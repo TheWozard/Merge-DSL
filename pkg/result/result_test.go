@@ -7,11 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestReference(t *testing.T) {
-	testCases := []struct {
+var (
+	testCases = []struct {
 		desc       string
 		operations func(r *result.Ref)
 		output     interface{}
+		benchmark  bool
 	}{
 		{
 			desc:       "empty ref",
@@ -23,7 +24,8 @@ func TestReference(t *testing.T) {
 			operations: func(r *result.Ref) {
 				r.Update("just a string")
 			},
-			output: "just a string",
+			output:    "just a string",
+			benchmark: true,
 		},
 
 		// Map
@@ -35,6 +37,7 @@ func TestReference(t *testing.T) {
 			output: map[string]interface{}{
 				"example": "map",
 			},
+			benchmark: true,
 		},
 		{
 			desc: "map allow empty false",
@@ -94,6 +97,7 @@ func TestReference(t *testing.T) {
 				},
 				"f1": 1,
 			},
+			benchmark: true,
 		},
 
 		// Slice
@@ -102,7 +106,8 @@ func TestReference(t *testing.T) {
 			operations: func(r *result.Ref) {
 				r.Slice(false, false).Append().Update("slice")
 			},
-			output: []interface{}{"slice"},
+			output:    []interface{}{"slice"},
+			benchmark: true,
 		},
 		{
 			desc: "slice allow empty false",
@@ -133,11 +138,27 @@ func TestReference(t *testing.T) {
 			output: []interface{}{nil},
 		},
 	}
+)
+
+func TestReference(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			data, ref := result.NewResult(nil)
 			tC.operations(ref)
 			require.Equal(t, tC.output, *data)
 		})
+	}
+}
+
+func BenchmarkResult(b *testing.B) {
+	for _, tC := range testCases {
+		if tC.benchmark {
+			b.Run(tC.desc, func(b *testing.B) {
+				_, ref := result.NewResult(nil)
+				for i := 0; i < b.N; i++ {
+					tC.operations(ref)
+				}
+			})
+		}
 	}
 }
