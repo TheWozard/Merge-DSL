@@ -22,12 +22,12 @@ func main() {
 			// This route is identical to document except it is done through graphql
 			api.SetupGraphQL(r)
 		}
-		if cfg.ReferenceAPI {
-			// This route provides a sandbox endpoint for
-		}
-		if cfg.SandboxAPI {
-			// TODO: This
-		}
+		// if cfg.ReferenceAPI {
+		// 	// This route provides a sandbox endpoint for
+		// }
+		// if cfg.SandboxAPI {
+		// 	// TODO: This
+		// }
 	})
 
 	r.Get("/health", config.HealthEndpoint{Config: cfg}.ServeHealth)

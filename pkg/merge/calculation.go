@@ -9,7 +9,10 @@ type Operation interface {
 func GetOperation(name string, data map[string]interface{}) Operation {
 	if factory, ok := OperationLookup[name]; ok {
 		op := factory()
-		mapstructure.Decode(data, op)
+		err := mapstructure.Decode(data, op)
+		if err != nil {
+			return nil
+		}
 		return op
 	}
 	return nil

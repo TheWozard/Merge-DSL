@@ -17,5 +17,5 @@ func (h HealthEndpoint) ServeHealth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Write(raw)
+	w.Write(raw) //nolint:errcheck
 }

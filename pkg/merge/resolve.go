@@ -15,7 +15,7 @@ func (d Traversal) Resolve(documents DocumentCursorSet, rules RulesCursorSet) in
 	final, ref := result.NewRef(nil)
 	state := NewRootState(documents, rules, ref)
 	d.step.resolve(state)
-	state.DelayedActions.Do()
+	state.DelayedActions.Do() //nolint:errcheck
 	return *final
 }
 
