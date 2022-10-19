@@ -12,7 +12,7 @@ type (
 )
 
 func (d Traversal) Resolve(documents DocumentCursorSet, rules RulesCursorSet) interface{} {
-	final, ref := result.NewResult(nil)
+	final, ref := result.NewRef(nil)
 	state := NewRootState(documents, rules, ref)
 	d.step.resolve(state)
 	state.DelayedActions.Do()

@@ -82,6 +82,7 @@ var (
 			output: map[string]interface{}{
 				"f1": 3, "f2": 2,
 			},
+			benchmark: true,
 		},
 		{
 			desc: "map stacked",
@@ -140,22 +141,22 @@ var (
 	}
 )
 
-func TestReference(t *testing.T) {
+func TestRef(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			data, ref := result.NewResult(nil)
+			data, ref := result.NewRef(nil)
 			tC.operations(ref)
 			require.Equal(t, tC.output, *data)
 		})
 	}
 }
 
-func BenchmarkResult(b *testing.B) {
+func BenchmarkRef(b *testing.B) {
 	for _, tC := range testCases {
 		if tC.benchmark {
 			b.Run(tC.desc, func(b *testing.B) {
-				_, ref := result.NewResult(nil)
 				for i := 0; i < b.N; i++ {
+					_, ref := result.NewRef(nil)
 					tC.operations(ref)
 				}
 			})
