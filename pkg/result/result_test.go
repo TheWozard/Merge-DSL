@@ -7,11 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestReference(t *testing.T) {
-	testCases := []struct {
+var (
+	testCases = []struct {
 		desc       string
 		operations func(r *result.Ref)
 		output     interface{}
+		benchmark  bool
 	}{
 		{
 			desc:       "empty ref",
@@ -23,7 +24,8 @@ func TestReference(t *testing.T) {
 			operations: func(r *result.Ref) {
 				r.Update("just a string")
 			},
-			output: "just a string",
+			output:    "just a string",
+			benchmark: true,
 		},
 
 		// Map
@@ -35,6 +37,7 @@ func TestReference(t *testing.T) {
 			output: map[string]interface{}{
 				"example": "map",
 			},
+			benchmark: true,
 		},
 		{
 			desc: "map allow empty false",
@@ -79,6 +82,7 @@ func TestReference(t *testing.T) {
 			output: map[string]interface{}{
 				"f1": 3, "f2": 2,
 			},
+			benchmark: true,
 		},
 		{
 			desc: "map stacked",
@@ -94,6 +98,7 @@ func TestReference(t *testing.T) {
 				},
 				"f1": 1,
 			},
+			benchmark: true,
 		},
 
 		// Slice
@@ -102,7 +107,8 @@ func TestReference(t *testing.T) {
 			operations: func(r *result.Ref) {
 				r.Slice(false, false).Append().Update("slice")
 			},
-			output: []interface{}{"slice"},
+			output:    []interface{}{"slice"},
+			benchmark: true,
 		},
 		{
 			desc: "slice allow empty false",
@@ -133,11 +139,27 @@ func TestReference(t *testing.T) {
 			output: []interface{}{nil},
 		},
 	}
+)
+
+func TestRef(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			data, ref := result.NewResult(nil)
+			data, ref := result.NewRef(nil)
 			tC.operations(ref)
 			require.Equal(t, tC.output, *data)
 		})
+	}
+}
+
+func BenchmarkRef(b *testing.B) {
+	for _, tC := range testCases {
+		if tC.benchmark {
+			b.Run(tC.desc, func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					_, ref := result.NewRef(nil)
+					tC.operations(ref)
+				}
+			})
+		}
 	}
 }

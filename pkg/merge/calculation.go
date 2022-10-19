@@ -26,12 +26,11 @@ type AddOperation struct {
 
 func (a *AddOperation) Do(local *State) {
 	sum := 0
-	if parent, ok := local.Parent.Ref.Get(); ok {
-		if typed, ok := parent.(map[string]interface{}); ok {
-			for _, key := range a.Keys {
-				if count, ok := typed[key].(int); ok {
-					sum += count
-				}
+	parent := local.Parent.Ref.Get()
+	if typed, ok := parent.(map[string]interface{}); ok {
+		for _, key := range a.Keys {
+			if count, ok := typed[key].(int); ok {
+				sum += count
 			}
 		}
 	}
@@ -45,13 +44,12 @@ type AverageOperation struct {
 func (a *AverageOperation) Do(local *State) {
 	sum := 0
 	total := 0
-	if parent, ok := local.Parent.Ref.Get(); ok {
-		if typed, ok := parent.(map[string]interface{}); ok {
-			for key, points := range a.Points {
-				if count, ok := typed[key].(int); ok {
-					sum += count * points
-					total += count
-				}
+	parent := local.Parent.Ref.Get()
+	if typed, ok := parent.(map[string]interface{}); ok {
+		for key, points := range a.Points {
+			if count, ok := typed[key].(int); ok {
+				sum += count * points
+				total += count
 			}
 		}
 	}
